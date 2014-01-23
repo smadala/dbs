@@ -1,10 +1,10 @@
-import static com.plethora.mem.DataBaseMemoryConfig.memoryProps;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
 import com.plethora.obj.Table;
 
@@ -15,10 +15,14 @@ public class DBSystem {
 			String line=null,tokens[]=null;
 			br=new BufferedReader(new FileReader(configFilePath));
 			
-			while( !DataBaseMemoryConfig.TABLE_BEGIN.equals(line = br.readLine() )){
+			while( !ConfigConstants.TABLE_BEGIN.equals(line = br.readLine() )){
 			    	
-				tokens=line.split(DataBaseMemoryConfig.PROPS_DELIMITER);
-				memoryProps.put(tokens[0],tokens[1]);
+				tokens=line.split(ConfigConstants.PROPS_DELIMITER);
+				//memoryProps.put(tokens[0],tokens[1]);
+				if(tokens[0] == ConfigConstants.PAGESIZE){
+					DataBaseMemoryConfig.PAGE_SIZE=Integer.parseInt(tokens[1]);
+					
+				}
 			}
 			Table table=new Table();
 			while( (line=br.readLine()) != null ){
