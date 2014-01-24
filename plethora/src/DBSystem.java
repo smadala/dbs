@@ -32,6 +32,7 @@ public class DBSystem {
 			}
 			/*Table table=new Table();
 			while( (line=br.readLine()) != null ){
+				if( line.equals(""));
 				
 				
 			}*/
