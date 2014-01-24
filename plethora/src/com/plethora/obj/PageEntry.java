@@ -10,6 +10,7 @@ public class PageEntry {
 	private int endRecordId;
 	private int leftOver=DataBaseMemoryConfig.PAGE_SIZE;
 	private boolean present=false;
+	private long offset;
 	
 	public boolean isPresent() {
 		return present;
@@ -61,6 +62,16 @@ public class PageEntry {
 		return leftOver;
 	}
 	
+	public long getOffset() {
+		return offset;
+	}
+
+	public void setOffset(long offset) {
+		this.offset = offset;
+	}
+
+
+
 	public static final  CompareByStartId COMPARE_BY_START_RECORD_ID = new PageEntry.CompareByStartId();
 	
 	private static class CompareByStartId implements Comparator<PageEntry>{
@@ -71,5 +82,14 @@ public class PageEntry {
 																		return 0;
 		}
 		
+	}
+	
+	public boolean canAddRecord(String line){
+		if(line.length() + 1 <=  leftOver)
+		{
+			leftOver=leftOver-line.length()+1;
+			return true;
+		}
+		return false;
 	}
 }

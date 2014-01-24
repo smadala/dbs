@@ -11,6 +11,7 @@ import com.plethora.mem.DataBaseMemoryConfig;
 import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
+import com.plethora.obj.Table;
 
 
 public class DBSystem {
@@ -100,7 +101,28 @@ public class DBSystem {
 		//TODO : check end condition if given recordId is not present in table
 		return allEntries.get(index);
 	}
+	
+	
+	public void insertRecord(String tableName, String record){
+		
+		Table table = DBMetaData.tableMetaData.get(tableName);
+		List<PageEntry> pageEntries = table.getPageEntries();
+		PageEntry lastEntry=pageEntries.get(pageEntries.size()-1);
+		if(lastEntry.canAddRecord(record)){
+			String pageKey = String.format(DBMetaData.LRU_MEMORY_KEY_FORMAT, tableName,lastEntry.getPageNumber());
+			
+			
+		}
+		
+		
+		
+	}
+	
+	
+	
+	
 	public static void main(String args[]){
+		//System.out.println("");
 		
 		/*DBSystem ob1=new DBSystem();
 		ob1.readConfig("/home/harshas/Desktop/config.txt");
