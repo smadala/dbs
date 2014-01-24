@@ -41,6 +41,7 @@ public class Table {
 		}
 		
 	}
+	//hello
 	public  enum DataType{
 		INT, FLOAT,	STRING,	FIXED_CHAR;
 	}
