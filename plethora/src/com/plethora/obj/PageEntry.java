@@ -17,10 +17,6 @@ public class PageEntry {
 		this.present = present;
 	}
 
-	public PageEntry(int x,int y){
-		startRecordId=x;
-		endRecordId=y;
-	}
 	public int getPageNumber() {
 		return pageNumber;
 	}
