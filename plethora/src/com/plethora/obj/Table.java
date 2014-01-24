@@ -9,6 +9,7 @@ public class Table {
 	private String tableName;
 	private Map<String,FieldType> fields;
 	private List<PageEntry> pageEntries;
+	
 	public Table() {
 		
 		fields=new HashMap<String,FieldType>();
@@ -25,6 +26,20 @@ public class Table {
 	public void setFields(Map<String, FieldType> fields) {
 		this.fields = fields;
 	}
+	
+	public String getTableName() {
+		return tableName;
+	}
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+	public List<PageEntry> getPageEntries() {
+		return pageEntries;
+	}
+	public void setPageEntries(List<PageEntry> pageEntries) {
+		this.pageEntries = pageEntries;
+	}
+
 	public static class FieldType{
 		private DataType name;
 		private int size;
@@ -42,6 +57,7 @@ public class Table {
 		}
 		
 	}
+	
 	//hello
 	public  enum DataType{
 		INT, FLOAT,	STRING,	FIXED_CHAR;

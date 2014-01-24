@@ -27,4 +27,16 @@ public class Page {
 			return false;
 		return true;
 	}
+	public List<String> getRecords() {
+		return records;
+	}
+	public void setRecords(List<String> records) {
+		this.records = records;
+	}
+	public int getLeftOverSize() {
+		return leftOverSize;
+	}
+	public void setLeftOverSize(int leftOverSize) {
+		this.leftOverSize = leftOverSize;
+	}
 }
