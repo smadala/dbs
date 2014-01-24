@@ -52,6 +52,7 @@ public class DBSystem {
 	public void populatePageInfo() {
 		mainMemoryPages=new Page[DataBaseMemoryConfig.NUM_OF_PAGES];
 		
+		
 	}
 
 	public String getRecord(String tableName, int recordId) {
