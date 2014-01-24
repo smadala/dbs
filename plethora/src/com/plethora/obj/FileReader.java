@@ -1,10 +1,18 @@
 package com.plethora.obj;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 
+import com.plethora.mem.ConfigConstants;
+
 public class FileReader {
-	public String readLine(InputStream stream)
+	public static String readLine(InputStream stream)
 	{
 		char line[]=new char[64];
 		int i=0,size=64,status=0;
@@ -42,6 +50,51 @@ public class FileReader {
 		else
 			return null;
 	}
+	
+	public static void writeLine(OutputStream os,String line, boolean flush){
+		byte [] bytes=new byte[line.length()+1];
+		int i=0;
+		for(;i<line.length();i++){
+			bytes[i] =(byte) line.charAt(i);
+		}
+		bytes[i]=(byte) '\n';
+		try {
+			os.write(bytes);
+			if(flush)
+				os.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	//public static String getFile
+	public static InputStream getTableInputStream(String tableName){
+		File dataFile = new File(ConfigConstants.PATH_FOR_DATA, tableName+ConfigConstants.TABLE_DATA_FILE_EXTENSION);
+		InputStream is=null;
+		try {
+			 is = new FileInputStream(dataFile);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return is;
+	}
+	
+	public static OutputStream getTableOutputStream(String tableName){
+		File dataFile = new File(ConfigConstants.PATH_FOR_DATA, tableName+ConfigConstants.TABLE_DATA_FILE_EXTENSION);
+		OutputStream os=null;
+		try {
+			 os = new FileOutputStream(dataFile,true);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return os;
+		
+	}
+	
 	
 	
 }

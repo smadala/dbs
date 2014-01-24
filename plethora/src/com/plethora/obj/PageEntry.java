@@ -1,5 +1,7 @@
 package com.plethora.obj;
 
+import java.util.Comparator;
+
 import com.plethora.mem.DataBaseMemoryConfig;
 
 public class PageEntry {
@@ -8,6 +10,7 @@ public class PageEntry {
 	private int endRecordId;
 	private int leftOver=DataBaseMemoryConfig.PAGE_SIZE;
 	private boolean present=false;
+	private long offset;
 	
 	public boolean isPresent() {
 		return present;
@@ -15,6 +18,12 @@ public class PageEntry {
 
 	public void setPresent(boolean present) {
 		this.present = present;
+	}
+	
+	
+
+	public PageEntry() {
+		
 	}
 
 	public int getPageNumber() {
@@ -47,5 +56,36 @@ public class PageEntry {
 	
 	public int getLeftOver(){
 		return leftOver;
+	}
+	
+	public long getOffset() {
+		return offset;
+	}
+
+	public void setOffset(long offset) {
+		this.offset = offset;
+	}
+
+
+
+	public static final  CompareByStartId COMPARE_BY_START_RECORD_ID = new PageEntry.CompareByStartId();
+	
+	private static class CompareByStartId implements Comparator<PageEntry>{
+
+		public int compare(PageEntry o1, PageEntry o2) {
+			if(o1.getStartRecordId() > o2.getStartRecordId())	  		return 1;
+			else if(o1.getStartRecordId() < o2.getStartRecordId())		return -1;
+																		return 0;
+		}
+		
+	}
+	
+	public boolean canAddRecord(String line){
+		if(line.length() + 1 <=  leftOver)
+		{
+			leftOver=leftOver-line.length()+1;
+			return true;
+		}
+		return false;
 	}
 }

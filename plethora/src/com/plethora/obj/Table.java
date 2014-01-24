@@ -16,6 +16,15 @@ public class Table {
 		this.pageEntries=new ArrayList<PageEntry>();
 	}
 	
+	
+	
+	public Map<String, FieldType> getFields() {
+		return fields;
+	}
+	public void setFields(Map<String, FieldType> fields) {
+		this.fields = fields;
+	}
+	
 	public String getTableName() {
 		return tableName;
 	}
@@ -28,13 +37,7 @@ public class Table {
 	public void setPageEntries(List<PageEntry> pageEntries) {
 		this.pageEntries = pageEntries;
 	}
-	
-	public Map<String, FieldType> getFields() {
-		return fields;
-	}
-	public void setFields(Map<String, FieldType> fields) {
-		this.fields = fields;
-	}
+
 	public static class FieldType{
 		private DataType name;
 		private int size;
@@ -52,6 +55,7 @@ public class Table {
 		}
 		
 	}
+	
 	//hello
 	public  enum DataType{
 		INT, FLOAT,	STRING,	FIXED_CHAR;
