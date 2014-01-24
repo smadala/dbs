@@ -14,7 +14,6 @@ public class DBSystem {
 	public void readConfig(String configFilePath) {
 		InputStream br=null;
 		int flag=0;
-		List<String> tableNames=new ArrayList<String>();
 		try {
 			String line=null,tokens[]=null;
 			br=new FileInputStream(configFilePath);
@@ -37,7 +36,7 @@ public class DBSystem {
 					flag=1;
 				}
 				else if(flag==1){
-					tableNames.add(line);
+					DBMetaData.tableNames.add(line);
 					flag=0;
 				}
 			}
@@ -67,11 +66,11 @@ public class DBSystem {
 	public String getRecord(String tableName, int recordId) {
 		return "record";
 	}
-	public static void main(String args[]){
+	/*public static void main(String args[]){
 		DBSystem ob1=new DBSystem();
 		ob1.readConfig("/home/harshas/Desktop/config.txt");
 		System.out.println("# of Pages "+DataBaseMemoryConfig.NUM_OF_PAGES);
 		System.out.println("Page Size "+DataBaseMemoryConfig.PAGE_SIZE);
 		System.out.println("Path for Data "+DataBaseMemoryConfig.PATH_FOR_DATA);
-	}
+	}*/
 }
