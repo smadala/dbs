@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 public class Dummy {
-	String readMe(InputStream stream)
+	String readLine(InputStream stream)
 	{
 		char line[]=new char[64];
 		int i=0,size=64,status=0;
@@ -41,16 +41,7 @@ public class Dummy {
 			return new String(line,0,status);
 		else
 			return null;
-}
-	
-	public static void main(String arg[]){
-		Dummy ob1=new Dummy();
-		try{
-			InputStream inputStream=new FileInputStream("/home/harshas/Desktop/c.txt");
-			System.out.println(ob1.readMe(inputStream));
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
 	}
+	
+	
 }
