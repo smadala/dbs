@@ -1,22 +1,23 @@
 package com.plethora.obj;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Table {
 	
-	private String name;
+	private String tableName;
 	private Map<String,FieldType> fields;
-	
+	private List<PageEntry> pageEntries;
 	public Table() {
 		
 		fields=new HashMap<String,FieldType>();
 	}
 	public String getName() {
-		return name;
+		return tableName;
 	}
 	public void setName(String name) {
-		this.name = name;
+		this.tableName = name;
 	}
 	public Map<String, FieldType> getFields() {
 		return fields;
