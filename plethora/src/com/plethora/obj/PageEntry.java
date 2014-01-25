@@ -5,25 +5,15 @@ import java.util.Comparator;
 import com.plethora.mem.DataBaseMemoryConfig;
 
 public class PageEntry {
+	
 	private int pageNumber;
 	private int startRecordId;
 	private int endRecordId;
-	private int leftOver=DataBaseMemoryConfig.PAGE_SIZE;
-	private boolean present=false;
+	private int leftOver;
 	private long offset;
 	
-	public boolean isPresent() {
-		return present;
-	}
-
-	public void setPresent(boolean present) {
-		this.present = present;
-	}
-	
-	
-
 	public PageEntry() {
-		
+		leftOver=DataBaseMemoryConfig.PAGE_SIZE;
 	}
 
 	public int getPageNumber() {

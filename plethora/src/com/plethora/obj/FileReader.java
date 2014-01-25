@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 import com.plethora.mem.ConfigConstants;
@@ -70,7 +71,7 @@ public class FileReader {
 	
 	//public static String getFile
 	public static InputStream getTableInputStream(String tableName){
-		File dataFile = new File(ConfigConstants.PATH_FOR_DATA, tableName+ConfigConstants.TABLE_DATA_FILE_EXTENSION);
+		File dataFile = getTableDataFile(tableName);
 		InputStream is=null;
 		try {
 			 is = new FileInputStream(dataFile);
@@ -82,7 +83,7 @@ public class FileReader {
 	}
 	
 	public static OutputStream getTableOutputStream(String tableName){
-		File dataFile = new File(ConfigConstants.PATH_FOR_DATA, tableName+ConfigConstants.TABLE_DATA_FILE_EXTENSION);
+		File dataFile = getTableDataFile(tableName); 
 		OutputStream os=null;
 		try {
 			 os = new FileOutputStream(dataFile,true);
@@ -93,7 +94,24 @@ public class FileReader {
 		return os;
 		
 	}
+	public static File getTableDataFile(String tableName){
+		return new File(ConfigConstants.PATH_FOR_DATA, tableName+ConfigConstants.TABLE_DATA_FILE_EXTENSION);
+	}
 	
+	
+	
+	public static RandomAccessFile getRandomAccessFile(String tableName,String mode){
+		
+		try {
+			RandomAccessFile randomAccessFile = new RandomAccessFile(getTableDataFile(tableName), mode);
+			return randomAccessFile;
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
 	
 	
 }

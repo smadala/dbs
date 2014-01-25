@@ -3,12 +3,16 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
+import com.plethora.mem.LRUMemory;
 import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
@@ -17,6 +21,12 @@ import com.plethora.obj.Table;
 
 
 public class DBSystem {
+	public static List<String> tableNames=new ArrayList<String>();
+	public static LRUMemory<String, Page> cachedPages=new LRUMemory<String, Page>(DataBaseMemoryConfig.NUM_OF_PAGES);
+	
+	public static Map<String,Table> tableMetaData=new HashMap<String, Table>();
+	
+	public static final String LRU_MEMORY_KEY_FORMAT="{0)_{1}"; // tableName_pageNumber
 	public void readConfig(String configFilePath) {
 		InputStream br=null;
 		int flag=0;
@@ -42,7 +52,7 @@ public class DBSystem {
 					flag=1;
 				}
 				else if(flag==1){
-					DBMetaData.tableNames.add(line);
+					tableNames.add(line);
 					flag=0;
 				}
 			}
@@ -66,28 +76,46 @@ public class DBSystem {
 	}
 
 	public void populatePageInfo() {
-		int totalTables=DBMetaData.tableNames.size();
+		
 		InputStream br=null;
-		FileReader obj=null;
-		int recordId=0,flag=0;
+		int recordId,pageNum;
 		String line;
-		HashMap tables=new HashMap(totalTables);
+		PageEntry pageEntry=null;
+		Table table=null;
+		long offset;
 		try{
-			for(int i=0;i<totalTables;i++){
-				tables.put(DBMetaData.tableNames.get(i),new Table(DBMetaData.tableNames.get(i)));
-				Table temp=(Table) tables.get(DBMetaData.tableNames.get(i));
-				br=new FileInputStream(DataBaseMemoryConfig.PATH_FOR_DATA+DBMetaData.tableNames.get(i));
-				obj=new FileReader();
-				while((line=obj.readLine(br))!=null){
-					if(flag==0){
-						PageEntry entry = new PageEntry();
-						entry.setStartRecordId(recordId);
-						recordId=recordId+1;
-					}
-					else{
+			for(String tableName:tableNames){
+				
+				table=new Table(tableName);
+				tableMetaData.put(tableName,table);
+				
+				br=FileReader.getTableInputStream(tableName);
+				recordId=0;
+				offset=0;
+				pageNum=0;
+				pageEntry = new PageEntry();
+				pageEntry.setPageNumber(pageNum);
+				pageEntry.setOffset(offset);
+				pageEntry.setStartRecordId(recordId);
+				
+				while((line=FileReader.readLine(br))!=null){
+					
+					if(!pageEntry.canAddRecord(line)){
 						
+						pageEntry.setEndRecordId(recordId-1);
+						table.getPageEntries().add(pageEntry);
+						pageNum++;
+						pageEntry=new PageEntry();
+						pageEntry.setStartRecordId(recordId); //Assume record length at most PAGE_SIZE
+						pageEntry.setOffset(offset);
+						pageEntry.setPageNumber(pageNum);
+
 					}
+					recordId++;
+					offset += line.length();
 				}
+				pageEntry.setEndRecordId(recordId-1);
+				table.getPageEntries().add(pageEntry);
 			}
 		}
 		catch(Exception e){
@@ -99,13 +127,13 @@ public class DBSystem {
 		 
 		PageEntry pageEntry = getPageEntry(tableName, recordId);
 		
-		String pageKey = String.format(DBMetaData.LRU_MEMORY_KEY_FORMAT, tableName,pageEntry.getPageNumber());
+		String pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName,pageEntry.getPageNumber());
 		
-		Page page =DBMetaData.cachedPages.get(pageKey);
+		Page page =cachedPages.get(pageKey);
 		if(page == null){
 			System.out.println("MISS ");
 			page = loadPage(tableName,pageEntry);
-			DBMetaData.cachedPages.put(pageKey, page);
+			cachedPages.put(pageKey, page);
 		}else{
 			System.out.println("HIT");
 		}
@@ -113,12 +141,23 @@ public class DBSystem {
 	}
 	
 	private Page loadPage(String tableName,PageEntry pageEntry){
-		return null;
+		RandomAccessFile fileReader = FileReader.getRandomAccessFile(tableName, "r"); 
+		Page page = new Page();
+		int numOfRecords=pageEntry.getEndRecordId() - pageEntry.getStartRecordId() + 1; 
+		for(int i=0;i<numOfRecords;i++){
+			try {
+				page.getRecords().add(fileReader.readLine());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return page;
 	}
 	
 	private PageEntry getPageEntry(String tableName, int recordId){
 		
-		List<PageEntry> allEntries =DBMetaData.tableMetaData.get(tableName).getPageEntries();
+		List<PageEntry> allEntries =tableMetaData.get(tableName).getPageEntries();
 		PageEntry lookupEntry=new PageEntry();
 		lookupEntry.setStartRecordId(recordId);
 		int index=Collections.binarySearch(allEntries, lookupEntry,PageEntry.COMPARE_BY_START_RECORD_ID);
@@ -133,13 +172,24 @@ public class DBSystem {
 	
 	public void insertRecord(String tableName, String record){
 		
-		Table table = DBMetaData.tableMetaData.get(tableName);
+		Table table = tableMetaData.get(tableName);
 		List<PageEntry> pageEntries = table.getPageEntries();
 		PageEntry lastEntry=pageEntries.get(pageEntries.size()-1);
+		Page page=null;
+		int lastRecordId=lastEntry.getEndRecordId();
+		int lastPageNum=lastEntry.getPageNumber();
 		if(lastEntry.canAddRecord(record)){
-			String pageKey = String.format(DBMetaData.LRU_MEMORY_KEY_FORMAT, tableName,lastEntry.getPageNumber());
-			
-			
+			String pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
+			page = cachedPages.get(pageKey);  
+			if( page == null ){
+			   	page=loadPage(tableName, lastEntry);
+			   	cachedPages.put(pageKey, page);
+			}
+			page.getRecords().add(record);
+			lastEntry.setEndRecordId(++lastRecordId);
+		}else{
+			page=new Page();
+			//page.setRecords(records)
 		}
 		
 		
