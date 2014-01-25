@@ -1,5 +1,6 @@
 package com.plethora.obj;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,17 +10,14 @@ public class Table {
 	private String tableName;
 	private Map<String,FieldType> fields;
 	private List<PageEntry> pageEntries;
+	public Table(String name) {
+		this.tableName=name;
+		this.fields=new HashMap<String,FieldType>();
+		this.pageEntries=new ArrayList<PageEntry>();
+	}
 	
-	public Table() {
-		
-		fields=new HashMap<String,FieldType>();
-	}
-	public String getName() {
-		return tableName;
-	}
-	public void setName(String name) {
-		this.tableName = name;
-	}
+	
+	
 	public Map<String, FieldType> getFields() {
 		return fields;
 	}

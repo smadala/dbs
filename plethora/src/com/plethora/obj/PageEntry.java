@@ -26,10 +26,6 @@ public class PageEntry {
 		
 	}
 
-	public PageEntry(int x,int y){
-		startRecordId=x;
-		endRecordId=y;
-	}
 	public int getPageNumber() {
 		return pageNumber;
 	}

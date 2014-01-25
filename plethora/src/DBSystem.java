@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import com.plethora.mem.ConfigConstants;
@@ -12,6 +13,7 @@ import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
 import com.plethora.obj.Table;
+
 
 
 public class DBSystem {
@@ -64,7 +66,33 @@ public class DBSystem {
 	}
 
 	public void populatePageInfo() {
-
+		int totalTables=DBMetaData.tableNames.size();
+		InputStream br=null;
+		FileReader obj=null;
+		int recordId=0,flag=0;
+		String line;
+		HashMap tables=new HashMap(totalTables);
+		try{
+			for(int i=0;i<totalTables;i++){
+				tables.put(DBMetaData.tableNames.get(i),new Table(DBMetaData.tableNames.get(i)));
+				Table temp=(Table) tables.get(DBMetaData.tableNames.get(i));
+				br=new FileInputStream(DataBaseMemoryConfig.PATH_FOR_DATA+DBMetaData.tableNames.get(i));
+				obj=new FileReader();
+				while((line=obj.readLine(br))!=null){
+					if(flag==0){
+						PageEntry entry = new PageEntry();
+						entry.setStartRecordId(recordId);
+						recordId=recordId+1;
+					}
+					else{
+						
+					}
+				}
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	public String getRecord(String tableName, int recordId) {
