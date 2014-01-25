@@ -23,7 +23,7 @@ import com.plethora.obj.Table;
 
 public class DBSystem {
 	public static List<String> tableNames=new ArrayList<String>();
-	public static LRUMemory<String, Page> cachedPages=new LRUMemory<String, Page>(DataBaseMemoryConfig.NUM_OF_PAGES);
+	public static LRUMemory<String, Page> cachedPages;
 	
 	public static Map<String,Table> tableMetaData=new HashMap<String, Table>();
 	
@@ -43,6 +43,7 @@ public class DBSystem {
 						}
 					else if(tokens[0].equals(ConfigConstants.NUM_PAGES)){
 						DataBaseMemoryConfig.NUM_OF_PAGES=Integer.parseInt(tokens[1]);
+						cachedPages=new LRUMemory<String, Page>(DataBaseMemoryConfig.NUM_OF_PAGES);
 					}
 					else if(tokens[0].equals(ConfigConstants.PATH_FOR_DATA)){
 						DataBaseMemoryConfig.PATH_FOR_DATA=new String(tokens[1]);
@@ -77,34 +78,39 @@ public class DBSystem {
 
 	public void populatePageInfo() {
 		
+
 		InputStream br=null;
 		int recordId,pageNum;
 		String line;
 		PageEntry pageEntry=null;
 		Table table=null;
 		long offset;
+		int startRecordNum;
 		try{
 			for(String tableName:tableNames){
 				
 				table=new Table(tableName);
 				tableMetaData.put(tableName,table);
-				
-				br=FileReader.getTableInputStream(tableName);
+				startRecordNum=0;
 				recordId=0;
+				br=FileReader.getTableInputStream(tableName);
 				offset=0;
 				pageNum=0;
 				pageEntry = new PageEntry();
 				pageEntry.setPageNumber(pageNum);
 				pageEntry.setOffset(offset);
 				pageEntry.setStartRecordId(recordId);
+				
 				while((line=FileReader.readLine(br))!=null){
-					//System.out.println(line);	
+					//System.out.println(line);
+					
 					if(!pageEntry.canAddRecord(line)){
 						//System.out.println(line);
-						pageEntry.setEndRecordId(recordId-1);
+						pageEntry.setEndRecordId(recordId-1);// if only one record in page then endRecordId should not be -1 
 						table.getPageEntries().add(pageEntry);
 						pageNum++;
 						pageEntry=new PageEntry();
+						pageEntry.canAddRecord(line);
 						pageEntry.setStartRecordId(recordId); //Assume record length at most PAGE_SIZE
 						pageEntry.setOffset(offset);
 						pageEntry.setPageNumber(pageNum);
@@ -130,26 +136,29 @@ public class DBSystem {
 		
 		Page page =cachedPages.get(pageKey);
 		if(page == null){
-			System.out.println("MISS ");
+			System.out.print("MISS ");
 			page = loadPage(tableName,pageEntry);
-			cachedPages.put(pageKey, page);
+			int pos=cachedPages.put(pageKey, page);
+			pos=pos < 0? 0: pos;
+			System.out.println(pos);
 		}else{
 			System.out.println("HIT");
 		}
-		return page.getRecords().get(pageEntry.getStartRecordId() - recordId);
+		return page.getRecords().get( recordId - pageEntry.getStartRecordId() );
 	}
 	
 	private Page loadPage(String tableName,PageEntry pageEntry){
 		RandomAccessFile fileReader = FileReader.getRandomAccessFile(tableName, "r"); 
 		Page page = new Page();
-		int numOfRecords=pageEntry.getEndRecordId() - pageEntry.getStartRecordId() + 1; 
-		for(int i=0;i<numOfRecords;i++){
-			try {
+		int numOfRecords=pageEntry.getEndRecordId() - pageEntry.getStartRecordId() + 1;
+		try {
+			fileReader.seek(pageEntry.getOffset());
+			for(int i=0;i<numOfRecords;i++){
 				page.getRecords().add(fileReader.readLine());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
+		}catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return page;
 	}
@@ -157,16 +166,36 @@ public class DBSystem {
 	private PageEntry getPageEntry(String tableName, int recordId){
 		
 		List<PageEntry> allEntries =tableMetaData.get(tableName).getPageEntries();
+		
+		
 		PageEntry lookupEntry=new PageEntry();
 		lookupEntry.setStartRecordId(recordId);
 		int index=Collections.binarySearch(allEntries, lookupEntry,PageEntry.COMPARE_BY_START_RECORD_ID);
+		//System.out.println("index "+index);
 		if( index < 0){
 			index *= -1;
 			index--;
 		}
+		if(index > allEntries.size() -1 )
+			index=allEntries.size() -1;
+		if(index < 0)
+			index=0;
+		
+		
+		while( index < allEntries.size() && 
+				!(recordId >= allEntries.get(index).getStartRecordId() && recordId <= allEntries.get(index).getEndRecordId()) ){
+				if(recordId < allEntries.get(index).getStartRecordId())
+					index--;
+				else
+					index++;
+			}
+		
 		//TODO : check end condition if given recordId is not present in table
+		//System.out.println("final index "+index);
 		return allEntries.get(index);
 	}
+	
+	
 	
 	
 	public void insertRecord(String tableName, String record){
@@ -180,7 +209,7 @@ public class DBSystem {
 		int lastPageNum=lastEntry.getPageNumber();
 		
 		//starting offset of new page in file is lastPage offset + number of bytes in lastPageEntry
-		long offset = lastEntry.getOffset() + (DataBaseMemoryConfig.PAGE_SIZE - lastEntry .getLeftOver());
+		long offset = lastEntry.getOffset() + (DataBaseMemoryConfig.PAGE_SIZE - lastEntry .getLeftOver() );
 		
 		if(lastEntry.canAddRecord(record)){ //space available in lastPage
 			pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
@@ -216,7 +245,7 @@ public class DBSystem {
 		
 		try {
 			dataFile.seek(offset);
-			dataFile.writeChars(record+"\n");
+			FileReader.writeLine(dataFile, record);
 			dataFile.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -229,7 +258,7 @@ public class DBSystem {
 		//System.out.println("");
 		
 		DBSystem ob1=new DBSystem();
-		ob1.readConfig("/home/harshas/Desktop/config.txt");
+		ob1.readConfig("/home/satya/workspace/dbs/plethora/config.txt");
 		/*System.out.println("# of Pages "+DataBaseMemoryConfig.NUM_OF_PAGES);
 		System.out.println("Page Size "+DataBaseMemoryConfig.PAGE_SIZE);
 		System.out.println("Path for Data "+DataBaseMemoryConfig.PATH_FOR_DATA);*/
@@ -241,6 +270,10 @@ public class DBSystem {
 			System.out.println(entry.getKey() +"  " + entry.getValue().getPageEntries().size());
 		}*/
 		for(int i=0;i<5;i++){
+			System.out.println(ob1.getRecord("employee", i));
+		}
+		ob1.insertRecord("employee", "66666");
+		for(int i=0;i<6;i++){
 			System.out.println(ob1.getRecord("employee", i));
 		}
 	}

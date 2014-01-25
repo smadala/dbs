@@ -52,17 +52,30 @@ public class FileReader {
 			return null;
 	}
 	
-	public static void writeLine(OutputStream os,String line, boolean flush){
-		byte [] bytes=new byte[line.length()+1];
-		int i=0;
-		for(;i<line.length();i++){
-			bytes[i] =(byte) line.charAt(i);
-		}
-		bytes[i]=(byte) '\n';
+	public static void writeLine(RandomAccessFile randomeAccessFile,String line){
 		try {
-			os.write(bytes);
-			if(flush)
-				os.flush();
+			char ch;
+			boolean addNewLineAtStart=false;
+			int extraCharacters=1;
+			
+			randomeAccessFile.seek(randomeAccessFile.length()-2);
+			if( (ch = (char) randomeAccessFile.readByte( )) != '\n'){
+			    extraCharacters++;
+			    addNewLineAtStart=true;
+			}
+			System.out.println(ch);
+			int length = line.length()+extraCharacters;
+			byte [] bytes=new byte[length];
+			int i=0;
+			if(addNewLineAtStart)
+				bytes[i++]='\n';
+			
+			for(int k=0;k<line.length();k++){
+				bytes[i++] =(byte) line.charAt(k);
+			}
+			
+			bytes[i]=(byte) '\n';
+			randomeAccessFile.write(bytes);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
