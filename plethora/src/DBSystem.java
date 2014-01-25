@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class DBSystem {
 	
 	public static Map<String,Table> tableMetaData=new HashMap<String, Table>();
 	
-	public static final String LRU_MEMORY_KEY_FORMAT="{0)_{1}"; // tableName_pageNumber
+	public static final String LRU_MEMORY_KEY_FORMAT="{0}_{1}"; // tableName_pageNumber
 	public void readConfig(String configFilePath) {
 		InputStream br=null;
 		int flag=0;
@@ -96,11 +97,10 @@ public class DBSystem {
 				pageEntry.setPageNumber(pageNum);
 				pageEntry.setOffset(offset);
 				pageEntry.setStartRecordId(recordId);
-				
 				while((line=FileReader.readLine(br))!=null){
-					
+					//System.out.println(line);	
 					if(!pageEntry.canAddRecord(line)){
-						
+						//System.out.println(line);
 						pageEntry.setEndRecordId(recordId-1);
 						table.getPageEntries().add(pageEntry);
 						pageNum++;
@@ -126,7 +126,7 @@ public class DBSystem {
 		 
 		PageEntry pageEntry = getPageEntry(tableName, recordId);
 		
-		String pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName,pageEntry.getPageNumber());
+		String pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName,pageEntry.getPageNumber());
 		
 		Page page =cachedPages.get(pageKey);
 		if(page == null){
@@ -183,7 +183,7 @@ public class DBSystem {
 		long offset = lastEntry.getOffset() + (DataBaseMemoryConfig.PAGE_SIZE - lastEntry .getLeftOver());
 		
 		if(lastEntry.canAddRecord(record)){ //space available in lastPage
-			pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
+			pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
 			page = cachedPages.get(pageKey);  
 			if( page == null ){
 			   	page=loadPage(tableName, lastEntry);
@@ -204,7 +204,7 @@ public class DBSystem {
 			newEntry.setOffset(offset);
 			page=new Page();
 			page.getRecords().add(record);
-			pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
+			pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
 			
 			cachedPages.put(pageKey, page);
 			
@@ -228,10 +228,20 @@ public class DBSystem {
 	public static void main(String args[]){
 		//System.out.println("");
 		
-		/*DBSystem ob1=new DBSystem();
+		DBSystem ob1=new DBSystem();
 		ob1.readConfig("/home/harshas/Desktop/config.txt");
-		System.out.println("# of Pages "+DataBaseMemoryConfig.NUM_OF_PAGES);
+		/*System.out.println("# of Pages "+DataBaseMemoryConfig.NUM_OF_PAGES);
 		System.out.println("Page Size "+DataBaseMemoryConfig.PAGE_SIZE);
 		System.out.println("Path for Data "+DataBaseMemoryConfig.PATH_FOR_DATA);*/
+		ob1.populatePageInfo();
+		/*Iterator<Map.Entry<String,Table>> it = tableMetaData.entrySet().iterator();
+		
+		while(it.hasNext()){
+			Map.Entry<String, Table> entry=it.next();
+			System.out.println(entry.getKey() +"  " + entry.getValue().getPageEntries().size());
+		}*/
+		for(int i=0;i<5;i++){
+			System.out.println(ob1.getRecord("employee", i));
+		}
 	}
 }

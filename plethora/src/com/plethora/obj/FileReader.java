@@ -10,6 +10,7 @@ import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 import com.plethora.mem.ConfigConstants;
+import com.plethora.mem.DataBaseMemoryConfig;
 
 public class FileReader {
 	public static String readLine(InputStream stream)
@@ -95,7 +96,7 @@ public class FileReader {
 		
 	}
 	public static File getTableDataFile(String tableName){
-		return new File(ConfigConstants.PATH_FOR_DATA, tableName+ConfigConstants.TABLE_DATA_FILE_EXTENSION);
+		return new File(DataBaseMemoryConfig.PATH_FOR_DATA, tableName+ConfigConstants.TABLE_DATA_FILE_EXTENSION);
 	}
 	
 	
