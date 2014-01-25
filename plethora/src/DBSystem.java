@@ -33,8 +33,7 @@ public class DBSystem {
 		try {
 			String line=null,tokens[]=null;
 			br=new FileInputStream(configFilePath);
-			FileReader objectRead=new FileReader();
-			while( (line = objectRead.readLine(br))!=null ){
+			while( (line = FileReader.readLine(br))!=null ){
 				if((!(line.equals(ConfigConstants.TABLE_BEGIN)))&& flag!=1){
 					tokens=line.split(ConfigConstants.PROPS_DELIMITER);
 					//memoryProps.put(tokens[0],tokens[1]);
@@ -112,7 +111,7 @@ public class DBSystem {
 
 					}
 					recordId++;
-					offset += line.length();
+					offset += line.length() + 1;
 				}
 				pageEntry.setEndRecordId(recordId-1);
 				table.getPageEntries().add(pageEntry);
@@ -176,10 +175,15 @@ public class DBSystem {
 		List<PageEntry> pageEntries = table.getPageEntries();
 		PageEntry lastEntry=pageEntries.get(pageEntries.size()-1);
 		Page page=null;
+		String pageKey;
 		int lastRecordId=lastEntry.getEndRecordId();
 		int lastPageNum=lastEntry.getPageNumber();
-		if(lastEntry.canAddRecord(record)){
-			String pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
+		
+		//starting offset of new page in file is lastPage offset + number of bytes in lastPageEntry
+		long offset = lastEntry.getOffset() + (DataBaseMemoryConfig.PAGE_SIZE - lastEntry .getLeftOver());
+		
+		if(lastEntry.canAddRecord(record)){ //space available in lastPage
+			pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
 			page = cachedPages.get(pageKey);  
 			if( page == null ){
 			   	page=loadPage(tableName, lastEntry);
@@ -187,17 +191,39 @@ public class DBSystem {
 			}
 			page.getRecords().add(record);
 			lastEntry.setEndRecordId(++lastRecordId);
-		}else{
+		}
+		else{ //create new Page 
+		 
+			
+			PageEntry newEntry= new PageEntry();
+			if(newEntry.canAddRecord(record));  //Assume record size is less than PAGE_SIZE
+			table.getPageEntries().add(newEntry);
+			newEntry.setStartRecordId(++lastRecordId);
+			newEntry.setEndRecordId(lastRecordId);
+			newEntry.setPageNumber(++lastPageNum);
+			newEntry.setOffset(offset);
 			page=new Page();
+			page.getRecords().add(record);
+			pageKey = String.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
+			
+			cachedPages.put(pageKey, page);
+			
 			//page.setRecords(records)
 		}
 		
+		//write to file
+		RandomAccessFile dataFile = FileReader.getRandomAccessFile(tableName, "rw");
 		
+		try {
+			dataFile.seek(offset);
+			dataFile.writeChars(record+"\n");
+			dataFile.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
-	
-	
-	
 	
 	public static void main(String args[]){
 		//System.out.println("");
