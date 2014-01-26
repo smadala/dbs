@@ -130,11 +130,11 @@ public class DBSystem {
 		catch(Exception e){
 			e.printStackTrace();
 		}
-//		pr();
+		pr();
 	}
 
 	public static String getRecord(String tableName, int recordId) {
-	//	System.out.println("Getrecord "+recordId);
+//		System.out.println("Getrecord "+recordId);
 		 
 		PageEntry pageEntry = getPageEntry(tableName, recordId);
 		
@@ -205,7 +205,8 @@ public class DBSystem {
 	
 	
 	public static void insertRecord(String tableName, String record){
-		System.out.println("Inserted is "+record);
+//		System.out.println("Inserted is "+record);
+		
 		Table table = tableMetaData.get(tableName);
 		List<PageEntry> pageEntries = table.getPageEntries();
 		PageEntry lastEntry=pageEntries.get(pageEntries.size()-1);
@@ -218,7 +219,7 @@ public class DBSystem {
 		long offset = lastEntry.getOffset() + (DataBaseMemoryConfig.PAGE_SIZE - lastEntry .getLeftOver() );
 		
 		pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
-		page = cachedPages.get(pageKey,false);  
+		page = cachedPages.get(pageKey,true);  
 		if( page == null ){
 		   	page=loadPage(tableName, lastEntry);
 		   	cachedPages.put(pageKey, page);

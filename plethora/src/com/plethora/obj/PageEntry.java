@@ -13,7 +13,7 @@ public class PageEntry {
 	private long offset;
 	
 	public PageEntry() {
-		leftOver=DataBaseMemoryConfig.PAGE_SIZE+1;
+		leftOver=DataBaseMemoryConfig.PAGE_SIZE;
 	}
 
 	public int getPageNumber() {
@@ -71,7 +71,7 @@ public class PageEntry {
 	}
 	
 	public boolean canAddRecord(String line){
-		if(line.length()+1<=  leftOver)
+		if(line.length()+1 <=  leftOver)
 		{
 			leftOver=leftOver-line.length()-1;
 			return true;
