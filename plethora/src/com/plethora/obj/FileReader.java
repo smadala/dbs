@@ -63,7 +63,7 @@ public class FileReader {
 			    extraCharacters++;
 			    addNewLineAtStart=true;
 			}
-			System.out.println(ch);
+			//System.out.println(ch);
 			int length = line.length()+extraCharacters;
 			byte [] bytes=new byte[length];
 			int i=0;

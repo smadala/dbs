@@ -21,8 +21,13 @@ public class LRUMemory<K,V> {
 		posMap=new HashMap<K,Integer>(capacity);
 	}
 	
-	public V get(K key){
-		return dataMap.get(key);
+	public V get(K key,boolean makeRecentlyUsed){
+		V value=dataMap.get(key);
+		//update recently accessed page
+		if(makeRecentlyUsed && value != null){
+			put(key,value);
+		}
+		return value;
 	}
 	
 	public int put(K key, V value){
@@ -34,15 +39,19 @@ public class LRUMemory<K,V> {
 			replace=posMap.get(oldKey); //update frame number
 			posMap.remove(oldKey);
 			posMap.put(key, replace);
-		}else{
+		}else if( dataMap.size() < capacity && !dataMap.containsKey(key)){
 			posMap.put(key, pos);
+			replace=pos;
 			pos++;
 		}
 		
 		queue.remove(key); //make given key is LRU page
 		queue.addFirst(key);
 		dataMap.put(key, value);
-		
+		/*for(K s:queue){
+			System.out.print(s+"   ");
+		}
+		System.out.println();*/
 		return replace;
 	}
 

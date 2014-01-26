@@ -8,6 +8,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ public class DBSystem {
 	public static Map<String,Table> tableMetaData=new HashMap<String, Table>();
 	
 	public static final String LRU_MEMORY_KEY_FORMAT="{0}_{1}"; // tableName_pageNumber
-	public void readConfig(String configFilePath) {
+	public static void readConfig(String configFilePath) {
 		InputStream br=null;
 		int flag=0;
 		try {
@@ -76,7 +77,7 @@ public class DBSystem {
 		}
 	}
 
-	public void populatePageInfo() {
+	public static void populateDBInfo() {
 		
 
 		InputStream br=null;
@@ -85,6 +86,7 @@ public class DBSystem {
 		PageEntry pageEntry=null;
 		Table table=null;
 		long offset;
+		int temp=0;
 		int startRecordNum;
 		try{
 			for(String tableName:tableNames){
@@ -102,8 +104,8 @@ public class DBSystem {
 				pageEntry.setStartRecordId(recordId);
 				
 				while((line=FileReader.readLine(br))!=null){
-					//System.out.println(line);
-					
+					//System.out.println("Record Length is "+line.length()+" Record is-"+line);
+					temp=temp+line.length();
 					if(!pageEntry.canAddRecord(line)){
 						//System.out.println(line);
 						pageEntry.setEndRecordId(recordId-1);// if only one record in page then endRecordId should not be -1 
@@ -114,9 +116,11 @@ public class DBSystem {
 						pageEntry.setStartRecordId(recordId); //Assume record length at most PAGE_SIZE
 						pageEntry.setOffset(offset);
 						pageEntry.setPageNumber(pageNum);
+						temp=line.length();
 
 					}
 					recordId++;
+					//System.out.println("Temp is "+temp);
 					offset += line.length() + 1;
 				}
 				pageEntry.setEndRecordId(recordId-1);
@@ -126,20 +130,22 @@ public class DBSystem {
 		catch(Exception e){
 			e.printStackTrace();
 		}
+//		pr();
 	}
 
-	public String getRecord(String tableName, int recordId) {
+	public static String getRecord(String tableName, int recordId) {
+	//	System.out.println("Getrecord "+recordId);
 		 
 		PageEntry pageEntry = getPageEntry(tableName, recordId);
 		
 		String pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName,pageEntry.getPageNumber());
 		
-		Page page =cachedPages.get(pageKey);
+		Page page =cachedPages.get(pageKey,true);
 		if(page == null){
 			System.out.print("MISS ");
 			page = loadPage(tableName,pageEntry);
 			int pos=cachedPages.put(pageKey, page);
-			pos=pos < 0? 0: pos;
+			//pos=pos < 0? 0: pos;
 			System.out.println(pos);
 		}else{
 			System.out.println("HIT");
@@ -147,7 +153,7 @@ public class DBSystem {
 		return page.getRecords().get( recordId - pageEntry.getStartRecordId() );
 	}
 	
-	private Page loadPage(String tableName,PageEntry pageEntry){
+	private static Page loadPage(String tableName,PageEntry pageEntry){
 		RandomAccessFile fileReader = FileReader.getRandomAccessFile(tableName, "r"); 
 		Page page = new Page();
 		int numOfRecords=pageEntry.getEndRecordId() - pageEntry.getStartRecordId() + 1;
@@ -163,7 +169,7 @@ public class DBSystem {
 		return page;
 	}
 	
-	private PageEntry getPageEntry(String tableName, int recordId){
+	private static PageEntry getPageEntry(String tableName, int recordId){
 		
 		List<PageEntry> allEntries =tableMetaData.get(tableName).getPageEntries();
 		
@@ -198,8 +204,8 @@ public class DBSystem {
 	
 	
 	
-	public void insertRecord(String tableName, String record){
-		
+	public static void insertRecord(String tableName, String record){
+		System.out.println("Inserted is "+record);
 		Table table = tableMetaData.get(tableName);
 		List<PageEntry> pageEntries = table.getPageEntries();
 		PageEntry lastEntry=pageEntries.get(pageEntries.size()-1);
@@ -211,13 +217,15 @@ public class DBSystem {
 		//starting offset of new page in file is lastPage offset + number of bytes in lastPageEntry
 		long offset = lastEntry.getOffset() + (DataBaseMemoryConfig.PAGE_SIZE - lastEntry .getLeftOver() );
 		
+		pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
+		page = cachedPages.get(pageKey,false);  
+		if( page == null ){
+		   	page=loadPage(tableName, lastEntry);
+		   	cachedPages.put(pageKey, page);
+		}
+		
 		if(lastEntry.canAddRecord(record)){ //space available in lastPage
-			pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
-			page = cachedPages.get(pageKey);  
-			if( page == null ){
-			   	page=loadPage(tableName, lastEntry);
-			   	cachedPages.put(pageKey, page);
-			}
+			
 			page.getRecords().add(record);
 			lastEntry.setEndRecordId(++lastRecordId);
 		}
@@ -253,22 +261,34 @@ public class DBSystem {
 		}
 		
 	}
+	public static void pr(){
+		DBSystem ob1=new DBSystem();
+		Iterator<Map.Entry<String,Table>> it = tableMetaData.entrySet().iterator();
+		while(it.hasNext()){
+			Map.Entry<String, Table> entry=it.next();
+			System.out.println(entry.getKey() +"  " + entry.getValue().getPageEntries().size());
+			for(PageEntry x:entry.getValue().getPageEntries()){
+				System.out.println("Page Number "+x.getPageNumber()+" StartRecordId "+x.getStartRecordId()+" EndRecordId "+x.getEndRecordId()+" LeftOver "+x.getLeftOver());
+			}
+		}
+	}
 	
-	public static void main(String args[]){
+	/*public static void main(String args[]){
 		//System.out.println("");
 		
 		DBSystem ob1=new DBSystem();
-		ob1.readConfig("/home/satya/workspace/dbs/plethora/config.txt");
-		/*System.out.println("# of Pages "+DataBaseMemoryConfig.NUM_OF_PAGES);
+		ob1.readConfig("/home/harshas/Desktop/dbs/plethora/config.txt");
+		System.out.println("# of Pages "+DataBaseMemoryConfig.NUM_OF_PAGES);
 		System.out.println("Page Size "+DataBaseMemoryConfig.PAGE_SIZE);
-		System.out.println("Path for Data "+DataBaseMemoryConfig.PATH_FOR_DATA);*/
+		System.out.println("Path for Data "+DataBaseMemoryConfig.PATH_FOR_DATA);
 		ob1.populatePageInfo();
-		/*Iterator<Map.Entry<String,Table>> it = tableMetaData.entrySet().iterator();
+		Iterator<Map.Entry<String,Table>> it = tableMetaData.entrySet().iterator();
 		
 		while(it.hasNext()){
 			Map.Entry<String, Table> entry=it.next();
 			System.out.println(entry.getKey() +"  " + entry.getValue().getPageEntries().size());
-		}*/
+		}
+		System.out.println(ob1.getRecord("countries", 3));
 		for(int i=0;i<5;i++){
 			System.out.println(ob1.getRecord("employee", i));
 		}
@@ -276,5 +296,5 @@ public class DBSystem {
 		for(int i=0;i<6;i++){
 			System.out.println(ob1.getRecord("employee", i));
 		}
-	}
+	}*/
 }
