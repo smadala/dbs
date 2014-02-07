@@ -11,9 +11,13 @@ public class PageEntry {
 	private int endRecordId;
 	private int leftOver;
 	private long offset;
-	
+	//private static boolean slashNAtStart=false;
 	public PageEntry() {
+		
 		leftOver=DataBaseMemoryConfig.PAGE_SIZE;
+		/*if(slashNAtStart)
+			leftOver--;
+		slashNAtStart=false;*/	
 	}
 
 	public int getPageNumber() {
@@ -74,6 +78,8 @@ public class PageEntry {
 		if(line.length()+1 <=  leftOver)
 		{
 			leftOver=leftOver-line.length()-1;
+			/*if(leftOver < 0)
+				slashNAtStart=true;*/
 			return true;
 		}
 		return false;

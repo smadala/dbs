@@ -87,13 +87,11 @@ public class DBSystem {
 		Table table=null;
 		long offset;
 		int temp=0;
-		int startRecordNum;
 		try{
 			for(String tableName:tableNames){
 				
 				table=new Table(tableName);
 				tableMetaData.put(tableName,table);
-				startRecordNum=0;
 				recordId=0;
 				br=FileReader.getTableInputStream(tableName);
 				offset=0;
@@ -130,7 +128,7 @@ public class DBSystem {
 		catch(Exception e){
 			e.printStackTrace();
 		}
-		pr();
+//		pr();
 	}
 
 	public static String getRecord(String tableName, int recordId) {
@@ -219,14 +217,14 @@ public class DBSystem {
 		long offset = lastEntry.getOffset() + (DataBaseMemoryConfig.PAGE_SIZE - lastEntry .getLeftOver() );
 		
 		pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName, lastPageNum);
-		page = cachedPages.get(pageKey,true);  
-		if( page == null ){
-		   	page=loadPage(tableName, lastEntry);
-		   	cachedPages.put(pageKey, page);
-		}
+		
 		
 		if(lastEntry.canAddRecord(record)){ //space available in lastPage
-			
+			page = cachedPages.get(pageKey,true);  
+			if( page == null ){
+			   	page=loadPage(tableName, lastEntry);
+			   	cachedPages.put(pageKey, page);
+			}
 			page.getRecords().add(record);
 			lastEntry.setEndRecordId(++lastRecordId);
 		}
