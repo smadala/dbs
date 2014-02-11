@@ -388,21 +388,29 @@ public class DBSystem {
 				dataFile.createNewFile();
 				csFile.createNewFile();
 				FileWriter frd=new FileWriter(dataFile);
-				BufferedWriter bwd=new BufferedWriter(frd);
+				BufferedWriter bwd=new BufferedWriter(frd);//to write in data file
+				FileWriter conr=new FileWriter("../plethora/config.txt",true);
+				BufferedWriter bwcon=new BufferedWriter(conr);//to write into config file
+				bwcon.write("BEGIN\n");
+				bwcon.write(tableName+"\n");
 				System.out.print("Attributes:");
 		        TColumnDefinition column;
 		        for(int i=0;i<pStmt.getColumnList().size();i++){
 		            column = pStmt.getColumnList().getColumn(i);
 		            System.out.print(column.getColumnName().toString());
 		            bwd.write(column.getColumnName().toString()+":");
+		            bwcon.write(column.getColumnName().toString()+",");
 		            System.out.print(" "+column.getDatatype().toString());
 		            bwd.write(column.getDatatype().toString());
+		            bwcon.write(column.getDatatype().toString()+"\n");
 		            if(i<pStmt.getColumnList().size()-1){
 		            	System.out.print(",");
 		            	bwd.write(",");
 		            }
 		        }
+		        bwcon.write("END\n");
 		        bwd.close();
+		        bwcon.close();
 			}
 			catch(Exception e){
 				e.printStackTrace();
