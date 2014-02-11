@@ -1,12 +1,18 @@
+import gudusoft.gsqlparser.*;
+import gudusoft.gsqlparser.nodes.*;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.TGSqlParser;
 import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
+import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -340,9 +346,70 @@ public class DBSystem {
 	
 	
 	public void createCommand(String query){
-		
+		File conFile=new File("../plethora/config.txt");
+		try{
+			if(!(conFile.exists())){
+				conFile.createNewFile();
+				FileWriter fw=new FileWriter(conFile);
+				BufferedWriter bw=new BufferedWriter(fw);
+				bw.write("PAGESIZE 8\n");
+				bw.write("NUM_PAGES 4\n");
+				bw.write("PATH_FOR_DATA /var/tmp\n");
+				bw.close();
+			}
+			sqlParser.sqltext=query;
+			int ret=sqlParser.parse();
+			if(ret==0){
+				for(int i=0;i<sqlParser.sqlstatements.size();i++){
+					analyzeCreateTableStmt((TCreateTableSqlStatement)sqlParser.sqlstatements.get(i));
+	                System.out.println("");
+	            }
+			}
+			else{
+				System.out.println("Query Invalid");
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
-	
+	private void analyzeCreateTableStmt(TCreateTableSqlStatement pStmt){
+		String tableName=pStmt.getTargetTable().toString();
+		readConfig("../plethora/config.txt");
+		File dataFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".data");
+		File csFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".csv");
+		if(dataFile.exists() && csFile.exists()){
+			System.out.println("Query Invalid");
+		}
+		else{
+			try{
+				System.out.println("Querytype:create");
+				System.out.println("Tablename:"+tableName);
+				dataFile.createNewFile();
+				csFile.createNewFile();
+				FileWriter frd=new FileWriter(dataFile);
+				BufferedWriter bwd=new BufferedWriter(frd);
+				System.out.print("Attributes:");
+		        TColumnDefinition column;
+		        for(int i=0;i<pStmt.getColumnList().size();i++){
+		            column = pStmt.getColumnList().getColumn(i);
+		            System.out.print(column.getColumnName().toString());
+		            bwd.write(column.getColumnName().toString()+":");
+		            System.out.print(" "+column.getDatatype().toString());
+		            bwd.write(column.getDatatype().toString());
+		            if(i<pStmt.getColumnList().size()-1){
+		            	System.out.print(",");
+		            	bwd.write(",");
+		            }
+		        }
+		        bwd.close();
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			
+		}
+	}
 	public void selectCommand(String query){
 		sqlParser.sqltext=query;
 		int ret = sqlParser.parse();
