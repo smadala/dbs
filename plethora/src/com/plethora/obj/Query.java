@@ -1,7 +1,7 @@
 package com.plethora.obj;
 
 public class Query {
-	private QueryType queryType;
+	protected QueryType queryType;
 	
 	
 	public QueryType getQueryType() {

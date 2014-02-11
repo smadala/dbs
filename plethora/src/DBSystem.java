@@ -1,8 +1,6 @@
 import gudusoft.gsqlparser.EDbVendor;
-import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
 import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
-import gudusoft.gsqlparser.stmt.oracle.TSqlplusCmdStatement;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
@@ -319,6 +318,15 @@ public class DBSystem {
 	 * ob1.insertRecord("employee", "66666"); for(int i=0;i<6;i++){
 	 * System.out.println(ob1.getRecord("employee", i)); } }
 	 */
+	
+	public static void main(String args[]){
+		Scanner scanner=new Scanner(System.in);
+		System.out.println("enter query....");
+		DBSystem db=new DBSystem();
+		while(true){
+			db.queryType(scanner.nextLine());
+		}
+	}
 
 	public void queryType(String query) {
 		String tokens[]=query.split("\\s+");
@@ -342,7 +350,7 @@ public class DBSystem {
 		if(ret == 0){
 			for(int i=0;i<sqlParser.sqlstatements.size();i++){
 				q=getSelectQuery((TSelectSqlStatement)sqlParser.sqlstatements.get(i));
-				
+				System.out.println(q);
 			}
 		}else{
 			System.out.println("Query Invalid");
@@ -350,8 +358,8 @@ public class DBSystem {
 	}
 	
 	private SelectQuery  getSelectQuery(TSelectSqlStatement selectStmt){
-		SelectQuery query=new SelectQuery();
-		selectStmt.getResultColumnList();
-		return null;
+		SelectQuery query=new SelectQuery(selectStmt);
+		//selectStmt.getResultColumnList();
+		return query;
 	}
 }
