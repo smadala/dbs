@@ -14,13 +14,7 @@ import java.io.RandomAccessFile;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
@@ -375,6 +369,10 @@ public class DBSystem {
 	}
 	private void analyzeCreateTableStmt(TCreateTableSqlStatement pStmt){
 		String tableName=pStmt.getTargetTable().toString();
+		String printIt=null,dataIt="",configIt=null;
+		boolean valid=true;
+		Set<String> set=new HashSet<String>();
+		int pKey=0;
 		readConfig("../plethora/config.txt");
 		File dataFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".data");
 		File csFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".csv");
@@ -383,34 +381,64 @@ public class DBSystem {
 		}
 		else{
 			try{
-				System.out.println("Querytype:create");
-				System.out.println("Tablename:"+tableName);
+				printIt="Querytype:create\n";
+				printIt=printIt+"Tablename:"+tableName+"\n";
 				dataFile.createNewFile();
 				csFile.createNewFile();
 				FileWriter frd=new FileWriter(dataFile);
 				BufferedWriter bwd=new BufferedWriter(frd);//to write in data file
 				FileWriter conr=new FileWriter("../plethora/config.txt",true);
 				BufferedWriter bwcon=new BufferedWriter(conr);//to write into config file
-				bwcon.write("BEGIN\n");
-				bwcon.write(tableName+"\n");
-				System.out.print("Attributes:");
+				//bwcon.write("BEGIN\n");
+				configIt="BEGIN\n";
+				//bwcon.write(tableName+"\n");
+				configIt=configIt+tableName+"\n";
+				//System.out.print("Attributes:");
+				printIt=printIt+"Attributes:";
 		        TColumnDefinition column;
 		        for(int i=0;i<pStmt.getColumnList().size();i++){
 		            column = pStmt.getColumnList().getColumn(i);
-		            System.out.print(column.getColumnName().toString());
-		            bwd.write(column.getColumnName().toString()+":");
-		            bwcon.write(column.getColumnName().toString()+",");
-		            System.out.print(" "+column.getDatatype().toString());
-		            bwd.write(column.getDatatype().toString());
-		            bwcon.write(column.getDatatype().toString()+"\n");
+		            if(set.contains(column.getColumnName().toString().toLowerCase())){
+		            	valid=false;
+		            	break;
+		            }
+		            if (column.getConstraints() != null){
+		                for(int j=0;j<column.getConstraints().size();j++){
+		                    //printConstraint(column.getConstraints().getConstraint(j),false);
+		                	//System.out.println(column.getConstraints().getConstraint(j).getConstraint_type().toString().toLowerCase());
+		                	if(column.getConstraints().getConstraint(j).getConstraint_type().toString().toLowerCase().equals("primary_key")){
+		                		pKey=pKey+1;
+		                	}
+		                //	System.out.println("Hello"+pKey);
+		                }
+		            }
+		            set.add(column.getColumnName().toString().toLowerCase());
+		            printIt=printIt+column.getColumnName().toString();
+		            dataIt=dataIt+column.getColumnName().toString()+":";
+		            configIt=configIt+column.getColumnName().toString()+",";
+		            printIt=printIt+" "+column.getDatatype().toString();
+		            dataIt=dataIt+column.getDatatype().toString();
+		            configIt=configIt+column.getDatatype().toString()+"\n";
 		            if(i<pStmt.getColumnList().size()-1){
-		            	System.out.print(",");
-		            	bwd.write(",");
+		            	printIt=printIt+",";
+		            	dataIt=dataIt+",";
 		            }
 		        }
-		        bwcon.write("END\n");
-		        bwd.close();
-		        bwcon.close();
+		        configIt=configIt+"END\n";
+		        if(valid==true && pKey==1){
+		        	System.out.print(printIt);
+		        	bwcon.write(configIt);
+		        	bwd.write(dataIt);
+			        bwd.close();
+			        bwcon.close();
+		        }
+		        else if(valid==false || pKey>1){
+		        	System.out.println("Invalid Query");
+			        bwd.close();
+			        bwcon.close();	
+			        dataFile.delete();
+			        csFile.delete();
+		        } 
 			}
 			catch(Exception e){
 				e.printStackTrace();
