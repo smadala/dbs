@@ -425,7 +425,7 @@ public class DBSystem {
 		            }
 		        }
 		        configIt=configIt+"END\n";
-		        if(valid==true && pKey==1){
+		        if(valid==true && pKey <= 1){
 		        	System.out.print(printIt);
 		        	bwcon.write(configIt);
 		        	bwd.write(dataIt);
@@ -453,6 +453,7 @@ public class DBSystem {
 		if(ret == 0){
 			for(int i=0;i<sqlParser.sqlstatements.size();i++){
 				q=getSelectQuery((TSelectSqlStatement)sqlParser.sqlstatements.get(i));
+				
 				System.out.println(q);
 			}
 		}else{

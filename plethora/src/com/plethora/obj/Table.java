@@ -1,9 +1,12 @@
 package com.plethora.obj;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Table {
 	
@@ -15,8 +18,6 @@ public class Table {
 		this.fields=new HashMap<String,FieldType>();
 		this.pageEntries=new ArrayList<PageEntry>();
 	}
-	
-	
 	
 	public Map<String, FieldType> getFields() {
 		return fields;
@@ -38,26 +39,6 @@ public class Table {
 		this.pageEntries = pageEntries;
 	}
 
-	public static class FieldType{
-		private DataType name;
-		private int size;
-		public DataType getName() {
-			return name;
-		}
-		public void setName(DataType name) {
-			this.name = name;
-		}
-		public int getSize() {
-			return size;
-		}
-		public void setSize(int size) {
-			this.size = size;
-		}
-		
-	}
 	
-	//hello
-	public  enum DataType{
-		INT, FLOAT,	STRING,	FIXED_CHAR;
-	}
+	
 }

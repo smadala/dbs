@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class SelectQuery extends Query {
 	private Map<String,TTable> tables;
@@ -26,6 +27,7 @@ public class SelectQuery extends Query {
 	private TOrderBy orderby;
 	private TGroupBy groupby;
 	private TExpression having;
+	private Set<String> resultColumnNames;
 	
 	public SelectQuery(TSelectSqlStatement stmt){
 		queryType=QueryType.SELECT;
@@ -164,7 +166,7 @@ public class SelectQuery extends Query {
     	text.delete(text.length()-1, text.length());
     	return text.toString();
     }
-    private String columnsToString(){
+    public String columnsToString(){
     	StringBuilder text=new StringBuilder();
     	TResultColumn resultColumn;
     	for(int i=0;i<columns.size();i++){
@@ -172,6 +174,13 @@ public class SelectQuery extends Query {
     		text.append(resultColumn.getExpr().toString()).append(",");
     	}
     	text.delete(text.length()-1, text.length());
+    	if(text.toString().equals("*") && resultColumnNames != null){
+    		text=new StringBuilder();
+    		for(String columnNames:resultColumnNames){
+    			text.append(columnNames).append(',');
+    		}
+    		text.delete(text.length()-1, text.length());
+    	}
     	return text.toString();
     }
         /*Input : select * from <table1>, <table2> where <col1>=<col2> groupby <col1> having
@@ -200,7 +209,7 @@ public class SelectQuery extends Query {
 		text.append(distinct==null?"NA":distinct.toString()).append('\n');
 		
 		text.append("Condition:");
-		text.append(condition==null?"NA":condition.toString()).append('\n');
+		text.append(condition==null?"NA":condition.getCondition().toString()).append('\n');
 		
 		text.append("Orderby:");
 		text.append(orderby==null?"NA":orderby.toString()).append('\n');
@@ -213,4 +222,14 @@ public class SelectQuery extends Query {
 		
 		return text.toString();
 	}
+
+	public Set<String> getResultColumnNames() {
+		return resultColumnNames;
+	}
+
+	public void setResultColumnNames(Set<String> resultColumnNames) {
+		this.resultColumnNames = resultColumnNames;
+	}
+	
+	
 }
