@@ -15,10 +15,13 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.Map.Entry;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
 import com.plethora.mem.LRUMemory;
+import com.plethora.obj.DataType;
+import com.plethora.obj.FieldType;
 import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
@@ -31,7 +34,7 @@ public class DBSystem {
 	public List<String> tableNames = new ArrayList<String>();
 	public LRUMemory<String, Page> cachedPages;
 
-	public Map<String, Table> tableMetaData = new HashMap<String, Table>();
+	public static Map<String, Table> tableMetaData = new HashMap<String, Table>();
   
 	public static final String LRU_MEMORY_KEY_FORMAT = "{0}_{1}"; // tableName_pageNumber
 	
@@ -42,12 +45,11 @@ public class DBSystem {
 
 	public void readConfig(String configFilePath) {
 		InputStream br = null;
-		int flag = 0;
 		try {
-			String line = null, tokens[] = null;
+			String line = null, tokens[] = null,tableb;
 			br = new FileInputStream(configFilePath);
 			while ((line = FileReader.readLine(br)) != null) {
-				if ((!(line.equals(ConfigConstants.TABLE_BEGIN))) && flag != 1) {
+				if ((!(line.equals(ConfigConstants.TABLE_BEGIN))) && (!(line.equals(ConfigConstants.TABLE_END)))){
 					tokens = line.split(ConfigConstants.PROPS_DELIMITER);
 					// memoryProps.put(tokens[0],tokens[1]);
 					if (tokens[0].equals(ConfigConstants.PAGESIZE)) {
@@ -63,10 +65,22 @@ public class DBSystem {
 								tokens[1]);
 					}
 				} else if (line.equals(ConfigConstants.TABLE_BEGIN)) {
-					flag = 1;
-				} else if (flag == 1) {
+					line=FileReader.readLine(br);
+					tableb=line;
 					tableNames.add(line);
-					flag = 0;
+					Table temp=new Table(line);
+					line=FileReader.readLine(br);
+					Map<String,FieldType> fields=new HashMap<String,FieldType>();
+					while(!(line.equals(ConfigConstants.TABLE_END))){
+						tokens=line.split(",");
+						FieldType fd=new FieldType();
+						fd.setName(tokens[0]);
+						fd.setType(DataType.isValidDataType(tokens[1]));
+						fields.put(tokens[0], fd);
+						line=FileReader.readLine(br);
+					}
+					temp.setFields(fields);
+					tableMetaData.put(tableb, temp);
 				}
 			}
 			/*
@@ -101,7 +115,7 @@ public class DBSystem {
 			for (String tableName : tableNames) {
 
 				table = new Table(tableName);
-				tableMetaData.put(tableName, table);
+				//tableMetaData.put(tableName, table);
 				recordId = 0;
 				br = FileReader.getTableInputStream(tableName);
 				offset = 0;
@@ -323,9 +337,24 @@ public class DBSystem {
 		Scanner scanner=new Scanner(System.in);
 		System.out.println("enter query....");
 		DBSystem db=new DBSystem();
-		while(true){
+		db.readConfig("../plethora/config.txt");
+		int i=2;
+		while(i>0){
 			db.queryType(scanner.nextLine());
+			i=i-1;
 		}
+		Iterator<Entry<String, Table>> entrySetIterator = tableMetaData.entrySet().iterator();
+		 while (entrySetIterator.hasNext()) {
+		    Entry entry = entrySetIterator.next();
+		    Table crap=(Table) entry.getValue();
+		    System.out.println("TableName" + entry.getKey());
+		    for(Map.Entry yes : crap.getFields().entrySet()){
+		    	System.out.print(yes.getKey()+" ");
+		    	FieldType shit =(FieldType) yes.getValue();
+		    	System.out.println(shit.getType().toString());
+		    }
+		    System.out.println();
+		 }
 	}
 
 	public void queryType(String query) {
@@ -369,11 +398,12 @@ public class DBSystem {
 	}
 	private void analyzeCreateTableStmt(TCreateTableSqlStatement pStmt){
 		String tableName=pStmt.getTargetTable().toString();
-		String printIt=null,dataIt="",configIt=null;
+		String printIt=null,dataIt="",configIt=null,checkType;
+		Table temp=new Table(tableName);
+		Map<String,FieldType> fields=new HashMap<String,FieldType>();
 		boolean valid=true;
 		Set<String> set=new HashSet<String>();
 		int pKey=0;
-		readConfig("../plethora/config.txt");
 		File dataFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".data");
 		File csFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".csv");
 		if(dataFile.exists() && csFile.exists()){
@@ -389,11 +419,8 @@ public class DBSystem {
 				BufferedWriter bwd=new BufferedWriter(frd);//to write in data file
 				FileWriter conr=new FileWriter("../plethora/config.txt",true);
 				BufferedWriter bwcon=new BufferedWriter(conr);//to write into config file
-				//bwcon.write("BEGIN\n");
 				configIt="BEGIN\n";
-				//bwcon.write(tableName+"\n");
 				configIt=configIt+tableName+"\n";
-				//System.out.print("Attributes:");
 				printIt=printIt+"Attributes:";
 		        TColumnDefinition column;
 		        for(int i=0;i<pStmt.getColumnList().size();i++){
@@ -404,18 +431,24 @@ public class DBSystem {
 		            }
 		            if (column.getConstraints() != null){
 		                for(int j=0;j<column.getConstraints().size();j++){
-		                    //printConstraint(column.getConstraints().getConstraint(j),false);
-		                	//System.out.println(column.getConstraints().getConstraint(j).getConstraint_type().toString().toLowerCase());
 		                	if(column.getConstraints().getConstraint(j).getConstraint_type().toString().toLowerCase().equals("primary_key")){
 		                		pKey=pKey+1;
 		                	}
-		                //	System.out.println("Hello"+pKey);
 		                }
 		            }
 		            set.add(column.getColumnName().toString().toLowerCase());
+		            FieldType fdr=new FieldType();
+		            fdr.setName(column.getColumnName().toString());// for tableMetaData
+		            fdr.setType(DataType.isValidDataType(column.getDatatype().toString().toLowerCase()));
+		            fields.put(column.getColumnName().toString(), fdr);
 		            printIt=printIt+column.getColumnName().toString();
 		            dataIt=dataIt+column.getColumnName().toString()+":";
 		            configIt=configIt+column.getColumnName().toString()+",";
+		            checkType=column.getDatatype().toString().toLowerCase();
+		            if(DataType.isValidDataType(checkType)==null){
+		            	valid=false;
+		            	break;
+		            }
 		            printIt=printIt+" "+column.getDatatype().toString();
 		            dataIt=dataIt+column.getDatatype().toString();
 		            configIt=configIt+column.getDatatype().toString()+"\n";
@@ -424,6 +457,7 @@ public class DBSystem {
 		            	dataIt=dataIt+",";
 		            }
 		        }
+		        temp.setFields(fields);
 		        configIt=configIt+"END\n";
 		        if(valid==true && pKey <= 1){
 		        	System.out.print(printIt);
@@ -431,6 +465,7 @@ public class DBSystem {
 		        	bwd.write(dataIt);
 			        bwd.close();
 			        bwcon.close();
+			       tableMetaData.put(tableName,temp);
 		        }
 		        else if(valid==false || pKey>1){
 		        	System.out.println("Invalid Query");

@@ -38,7 +38,42 @@ public class Table {
 	public void setPageEntries(List<PageEntry> pageEntries) {
 		this.pageEntries = pageEntries;
 	}
+	/*public static enum DataType{
+		INTEGER("integer"), FLOAT("float"), VARCHAR("varchar");
+		private String name;
+		private static Map<DataType, Set<String>> validOperations;
+		
 
+		private DataType(String name) {
+			this.name = name;
+			Set<String> intValidOperation = new HashSet<>(Arrays.asList("<", ">",
+					">=", "<=", "==", "<>"));
+			Set<String> floatValidOperation = new HashSet<>(Arrays.asList("<", ">",
+					">=", "<=", "==", "<>"));
+			Set<String> varcharValidOperation = new HashSet<>(Arrays.asList("LIKE"));
+			validOperations.put(INTEGER, intValidOperation);
+			validOperations.put(FLOAT, floatValidOperation);
+			validOperations.put(VARCHAR, varcharValidOperation);
+		}
+
+		public boolean isValidOperation(DataType type, String oper) {
+			// TODO trim oper
+			Set<String> typeOpearion = validOperations.get(type);
+			return typeOpearion.contains(oper);
+		}
+		
+	}
+	public static boolean isValidDataType(String x){
+		System.out.println(DataType.INTEGER.name);
+		if(x.equals(DataType.FLOAT.toString()) || x.equals(DataType.INTEGER.toString())){
+			return true;
+		}
+		else if(x.matches("varchar(\\d+)")){
+			return true;
+		}
+		else
+			return false;
+	}*/
 	
 	
 }
