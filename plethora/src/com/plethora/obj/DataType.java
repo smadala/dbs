@@ -36,7 +36,6 @@ public enum DataType{
 		return typeOpearion.contains(oper);
 	}
 	public static DataType isValidDataType(String x){
-		
 		if(x.equals(FLOAT.toString().toLowerCase())){
 			return DataType.FLOAT;
 		}

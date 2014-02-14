@@ -81,7 +81,7 @@ public class DBSystem {
 						line=FileReader.readLine(br);
 					}
 					temp.setFields(fields);
-					tableMetaData.put(tableb, temp);
+					tableMetaData.put(tableb.toLowerCase(), temp);
 				}
 			}
 			/*
@@ -335,27 +335,21 @@ public class DBSystem {
 	 */
 	
 	public static void main(String args[]){
-		Scanner scanner=new Scanner(System.in);
-		System.out.println("enter query....");
-		DBSystem db=new DBSystem();
-		db.readConfig("../plethora/config.txt");
-		int i=2;
-		while(i>0){
-			db.queryType(scanner.nextLine());
-			//i=i-1;
+		DataBaseMemoryConfig.PATH_FOR_CONF_FILE=args[0];
+		DBSystem obj=new DBSystem();
+		String query;
+		obj.readConfig(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
+		try{
+			InputStream br=new FileInputStream(args[1]);
+			while((query=FileReader.readLine(br))!=null){
+				obj.queryType(query);
+				System.out.println();
+			}
 		}
-		Iterator<Entry<String, Table>> entrySetIterator = tableMetaData.entrySet().iterator();
-		 while (entrySetIterator.hasNext()) {
-			Entry<String, Table> entry = entrySetIterator.next();
-		    Table table=entry.getValue();
-		    System.out.println("TableName" + entry.getKey());
-		    for(Map.Entry<String,FieldType> yes : table.getFields().entrySet()){
-		    	System.out.print(yes.getKey()+" ");
-		    	FieldType fieldType = yes.getValue();
-		    	System.out.println(fieldType.getType().toString());
-		    }
-		    System.out.println();
-		 }
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
 	}
 
 	public void queryType(String query) {
@@ -370,7 +364,7 @@ public class DBSystem {
 	
 	
 	public void createCommand(String query){
-		File conFile=new File("../plethora/config.txt");
+		File conFile=new File(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
 		try{
 			if(!(conFile.exists())){
 				conFile.createNewFile();
@@ -399,28 +393,21 @@ public class DBSystem {
 	}
 	private void analyzeCreateTableStmt(TCreateTableSqlStatement pStmt){
 		String tableName=pStmt.getTargetTable().toString();
+		String tokens[]=null,toks[]=null;
 		String printIt=null,dataIt="",configIt=null,checkType;
 		Table temp=new Table(tableName);
 		Map<String,FieldType> fields=new HashMap<String,FieldType>();
 		boolean valid=true;
 		Set<String> set=new HashSet<String>();
 		int pKey=0;
-		File dataFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".data");
-		File csFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".csv");
-		if(dataFile.exists() && csFile.exists()){
+		if(tableMetaData.containsKey(tableName.toLowerCase())){
 			System.out.println("Query Invalid");
 		}
 		else{
 			try{
 				printIt="Querytype:create\n";
 				printIt=printIt+"Tablename:"+tableName+"\n";
-				dataFile.createNewFile();
-				csFile.createNewFile();
-				FileWriter frd=new FileWriter(dataFile);
-				BufferedWriter bwd=new BufferedWriter(frd);//to write in data file
-				FileWriter conr=new FileWriter("../plethora/config.txt",true);
-				BufferedWriter bwcon=new BufferedWriter(conr);//to write into config file
-				configIt="BEGIN\n";
+				configIt="\nBEGIN\n";
 				configIt=configIt+tableName+"\n";
 				printIt=printIt+"Attributes:";
 		        TColumnDefinition column;
@@ -441,7 +428,12 @@ public class DBSystem {
 		            FieldType fdr=new FieldType();
 		            fdr.setName(column.getColumnName().toString());// for tableMetaData
 		            fdr.setType(DataType.isValidDataType(column.getDatatype().toString().toLowerCase()));
-		            fields.put(column.getColumnName().toString(), fdr);
+		            if(column.getDatatype().toString().toLowerCase().matches("varchar\\([0-9]+\\)")){
+		            	tokens=column.getDatatype().toString().split("\\(");
+		            	toks=tokens[1].split("\\)");
+		            	fdr.setSize(Integer.parseInt(toks[0]));
+		            }
+		            fields.put(column.getColumnName().toString().toLowerCase(), fdr);
 		            printIt=printIt+column.getColumnName().toString();
 		            dataIt=dataIt+column.getColumnName().toString()+":";
 		            configIt=configIt+column.getColumnName().toString()+",";
@@ -459,21 +451,25 @@ public class DBSystem {
 		            }
 		        }
 		        temp.setFields(fields);
-		        configIt=configIt+"END\n";
+		        configIt=configIt+"END";
 		        if(valid==true && pKey <= 1){
+		        	File dataFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".data");
+		    		File csFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".csv");
+		    		dataFile.createNewFile();
+					csFile.createNewFile();
+					FileWriter frd=new FileWriter(dataFile);
+					BufferedWriter bwd=new BufferedWriter(frd);//to write in data file
+					FileWriter conr=new FileWriter(DataBaseMemoryConfig.PATH_FOR_CONF_FILE,true);
+					BufferedWriter bwcon=new BufferedWriter(conr);//to write into config file
 		        	System.out.print(printIt);
 		        	bwcon.write(configIt);
 		        	bwd.write(dataIt);
 			        bwd.close();
 			        bwcon.close();
-			       tableMetaData.put(tableName,temp);
+			       tableMetaData.put(tableName.toLowerCase(),temp);
 		        }
 		        else if(valid==false || pKey>1){
-		        	System.out.println("Invalid Query");
-			        bwd.close();
-			        bwcon.close();	
-			        dataFile.delete();
-			        csFile.delete();
+		        	System.out.println("Query Invalid");
 		        } 
 			}
 			catch(Exception e){
