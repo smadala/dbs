@@ -29,6 +29,15 @@ public enum DataType{
 	private DataType(String name) {
 		this.name = name;
 	}
+	public String getName() {
+		return name;
+	}
+
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 
 	public boolean isValidOperation(DataType type, String oper) {
 		// TODO trim oper
@@ -36,14 +45,15 @@ public enum DataType{
 		return typeOpearion.contains(oper);
 	}
 	public static DataType isValidDataType(String x){
-		if(x.equals(FLOAT.toString().toLowerCase())){
-			return DataType.FLOAT;
-		}
-		else if(x.equals(INTEGER.toString().toLowerCase()) || x.equals("int")){
+		x=x.toLowerCase();
+		 if(x.equals(INTEGER.getName()) || x.equals("int")){
 			return DataType.INTEGER;
 		}
-		else if(x.matches("varchar\\([0-9]+\\)")){
-			return DataType.VARCHAR;
+		 else if(x.matches("varchar\\([0-9]+\\)")){
+				return DataType.VARCHAR;
+		}
+		 else if(x.equals(FLOAT.getName())){
+			return DataType.FLOAT;
 		}
 		else
 			return null;

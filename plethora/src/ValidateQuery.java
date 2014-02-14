@@ -7,6 +7,7 @@ import gudusoft.gsqlparser.nodes.TTable;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,8 +24,6 @@ public class ValidateQuery {
 	public boolean validataQuery(SelectQuery query,
 			Map<String,Table> tableMetaData)throws InvalidQuery 
 	{
-		
-		
 		//validate tablename
 		Iterator<Map.Entry<String,TTable>> it=query.getTables().entrySet().iterator();
 		String tableName;
@@ -37,7 +36,7 @@ public class ValidateQuery {
 		}
 		
 		//validate columns
-		Set<String> allColumnNames=new LinkedHashSet<String>(3);
+		Map<String,String> allColumnNames=new LinkedHashMap<String,String>(3);
 		Map<String,Set<String>> tableFielNames=new HashMap<>(3);
 		Map<String,Map<String,FieldType>> tableAttributes=new HashMap<String,Map<String,FieldType>>(3);
 		Map<String,FieldType> fields;
@@ -51,11 +50,15 @@ public class ValidateQuery {
 			fields=tableMetaData.get(tableName).getFields();
 			fieldNames=fields.keySet();
 			tableFielNames.put(tableName, fieldNames);
-			allColumnNames.addAll(fieldNames);
+			for(String fieldName:fieldNames){
+				if(!allColumnNames.containsKey(fieldName)){
+					allColumnNames.put(fieldName,fields.get(fieldName).getName());
+				}
+			}
 			tableAttributes.put(tableName, fields);
 		}
 		if(query.columnsToString().equals("*")){
-			query.setResultColumnNames(allColumnNames);
+			query.setResultColumnNames(new LinkedHashSet(allColumnNames.values()));
 		}else{ //validate given columns
 			for(int i=0;i<query.getColumns().size();i++){
 				TResultColumn column=query.getColumns().getResultColumn(i);
@@ -99,7 +102,7 @@ public class ValidateQuery {
 		return true;
 	}
 	private boolean validateCondition(TExpression condition,Map<String,Set<String>> tableFielNames,
-			Set<String> allColumnNames,Map<String,Map<String,FieldType>> tableAttributes ) throws InvalidQuery{
+			Map<String,String> allColumnNames,Map<String,Map<String,FieldType>> tableAttributes ) throws InvalidQuery{
 		if( !is_compare_condition( condition.getExpressionType( ) ))
 			return validateCondition(condition.getLeftOperand(), tableFielNames, allColumnNames, tableAttributes) && 
 					validateCondition(condition.getRightOperand(), tableFielNames, allColumnNames, tableAttributes);
@@ -119,7 +122,7 @@ public class ValidateQuery {
 	}
 	
 	private Class  getType(TExpression oper, Map<String,Set<String>> tableFielNames,
-			Set<String> allColumnNames,Map<String,Map<String,FieldType>> tableAttributes ) throws InvalidQuery{
+			Map<String,String> allColumnNames,Map<String,Map<String,FieldType>> tableAttributes ) throws InvalidQuery{
 		String rawVal=oper.toString();
 		Map<DataType,Class> typeClasses=getTypeMap();
 		try{
@@ -149,7 +152,7 @@ public class ValidateQuery {
 		return null;
 	}
 	private DataType getDataType(String columnName,Map<String,Map<String,FieldType>> tableAttributes, 
-			Map<String,Set<String>> tableFielNames,	Set<String> allColumnNames){
+			Map<String,Set<String>> tableFielNames,	Map<String,String> allColumnNames){
 		String tableName;
 		Set<String> fieldNames;
 		columnName=SelectQuery.stripParanthesis(columnName);
@@ -166,7 +169,7 @@ public class ValidateQuery {
 			return getDataType(columnName, tableName, tableAttributes);
 			
 		}else{
-			if(!allColumnNames.contains(columnName.toLowerCase()))
+			if(!allColumnNames.containsKey(columnName.toLowerCase()))
 				return null;
 			Iterator<Map.Entry<String, Map<String,FieldType>>> it=tableAttributes.entrySet().iterator();
 			while(it.hasNext()){
@@ -196,7 +199,7 @@ public class ValidateQuery {
 	}
 	
 	private boolean validateColumn(String columnName,Map<String,Set<String>> tableFielNames,
-			Set<String> allColumnNames) throws InvalidQuery {
+			Map<String,String> allColumnNames) throws InvalidQuery {
 		String tableName;
 		Set<String> fieldNames;
 		columnName=SelectQuery.stripParanthesis(columnName);
@@ -211,7 +214,7 @@ public class ValidateQuery {
 			if(!fieldNames.contains(columnName)) //column name not exist
 				throw  new InvalidQuery("Unknown column name: " +columnName + " in "+tableName);
 		}else{
-			if(!allColumnNames.contains(columnName.toLowerCase()))
+			if(!allColumnNames.containsKey(columnName.toLowerCase()))
 				throw  new InvalidQuery("Unknown column name: " +columnName );
 		}
 		return true;

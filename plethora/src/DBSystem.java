@@ -77,7 +77,7 @@ public class DBSystem {
 						FieldType fd=new FieldType();
 						fd.setName(tokens[0]);
 						fd.setType(DataType.isValidDataType(tokens[1]));
-						fields.put(tokens[0], fd);
+						fields.put(tokens[0].toLowerCase(), fd);
 						line=FileReader.readLine(br);
 					}
 					temp.setFields(fields);
@@ -341,7 +341,7 @@ public class DBSystem {
 		obj.readConfig(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
 		try{
 			InputStream br=new FileInputStream(args[1]);
-			while((query=FileReader.readLine(br))!=null){
+			while((query=FileReader.readLine(br))!=null && !query.trim().isEmpty()){
 				obj.queryType(query);
 				System.out.println();
 			}
@@ -366,7 +366,7 @@ public class DBSystem {
 	public void createCommand(String query){
 		File conFile=new File(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
 		try{
-			if(!(conFile.exists())){
+			/*if(!(conFile.exists())){
 				conFile.createNewFile();
 				FileWriter fw=new FileWriter(conFile);
 				BufferedWriter bw=new BufferedWriter(fw);
@@ -374,7 +374,7 @@ public class DBSystem {
 				bw.write("NUM_PAGES 4\n");
 				bw.write("PATH_FOR_DATA /var/tmp\n");
 				bw.close();
-			}
+			}*/
 			sqlParser.sqltext=query;
 			int ret=sqlParser.parse();
 			if(ret==0){
@@ -480,18 +480,19 @@ public class DBSystem {
 	}
 	
 	public void selectCommand(String query){
+		ValidateQuery validateQuery=new ValidateQuery();
 		sqlParser.sqltext=query;
 		int ret = sqlParser.parse();
 		SelectQuery q=null;
 		if(ret == 0){
 			for(int i=0;i<sqlParser.sqlstatements.size();i++){
 				q=new SelectQuery((TSelectSqlStatement)sqlParser.sqlstatements.get(i),query);
-				ValidateQuery validateQuery=new ValidateQuery();
 				try {
 					validateQuery.validataQuery(q, tableMetaData);
 				} catch (InvalidQuery e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					System.out.println("Query Invalid");
 					return;
 				}
 				System.out.println(q);

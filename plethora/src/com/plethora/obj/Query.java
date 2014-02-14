@@ -20,6 +20,15 @@ public class Query {
 			this.name=name;
 		}
 		private String name;
+		
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
 		public static QueryType getQueryType(String name){
 			switch(name.toLowerCase()){
 			case "create": return CREATE;

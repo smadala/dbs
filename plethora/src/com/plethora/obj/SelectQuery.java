@@ -70,27 +70,27 @@ public class SelectQuery extends Query {
         //            System.out.printf("table: %s, alias: %s\n",join.getTable().toString(),(join.getTable().getAliasClause() !=null)?join.getTable().getAliasClause().toString():"");
                     break;
                 case TBaseType.join_source_table:
-                    System.out.printf("table: %s, alias: %s\n",join.getTable().toString(),(join.getTable().getAliasClause() !=null)?join.getTable().getAliasClause().toString():"");
+//                    System.out.printf("table: %s, alias: %s\n",join.getTable().toString(),(join.getTable().getAliasClause() !=null)?join.getTable().getAliasClause().toString():"");
                     for(int j=0;j<join.getJoinItems().size();j++){
                         TJoinItem joinItem = join.getJoinItems().getJoinItem(j);
-                        System.out.printf("Join type: %s\n",joinItem.getJoinType().toString());
+                      //  System.out.printf("Join type: %s\n",joinItem.getJoinType().toString());
                         System.out.printf("table: %s, alias: %s\n",joinItem.getTable().toString(),(joinItem.getTable().getAliasClause() !=null)?joinItem.getTable().getAliasClause().toString():"");
                         tableKey=join.getTable().getAliasClause()==null?join.getTable().toString():join.getTable().getAliasClause().toString();
                     	tables.put(tableKey,join.getTable());
                         if (joinItem.getOnCondition() != null){
                             System.out.printf("On: %s\n",joinItem.getOnCondition().toString());
                         }else  if (joinItem.getUsingColumns() != null){
-                            System.out.printf("using: %s\n",joinItem.getUsingColumns().toString());
+                            //System.out.printf("using: %s\n",joinItem.getUsingColumns().toString());
                         }
                     }
                     break;
                 case TBaseType.join_source_join:
                     TJoin source_join = join.getJoin();
-                    System.out.printf("table: %s, alias: %s\n",source_join.getTable().toString(),(source_join.getTable().getAliasClause() !=null)?source_join.getTable().getAliasClause().toString():"");
+                  //  System.out.printf("table: %s, alias: %s\n",source_join.getTable().toString(),(source_join.getTable().getAliasClause() !=null)?source_join.getTable().getAliasClause().toString():"");
 
                     for(int j=0;j<source_join.getJoinItems().size();j++){
                         TJoinItem joinItem = source_join.getJoinItems().getJoinItem(j);
-                        System.out.printf("source_join type: %s\n",joinItem.getJoinType().toString());
+                  //      System.out.printf("source_join type: %s\n",joinItem.getJoinType().toString());
                         System.out.printf("table: %s, alias: %s\n",joinItem.getTable().toString(),(joinItem.getTable().getAliasClause() !=null)?joinItem.getTable().getAliasClause().toString():"");
                         tableKey=join.getTable().getAliasClause()==null?join.getTable().toString():join.getTable().getAliasClause().toString();
                     	tables.put(tableKey,join.getTable());
@@ -217,7 +217,7 @@ public class SelectQuery extends Query {
 	public String toString(){
 		StringBuilder text=new StringBuilder();
 		text.append("Querytype:");
-		text.append(queryType.toString()).append('\n');
+		text.append(queryType.getName()).append('\n');
 		
 		text.append("Tablename:");
 		text.append(tablesToString()).append('\n');
@@ -239,7 +239,7 @@ public class SelectQuery extends Query {
 		text.append(groupby==null?"NA":groupby.getItems().toString()).append('\n');
 		
 		text.append("Having:");
-		text.append(having==null?"NA":having.toString()).append('\n');
+		text.append(having==null?"NA":having.toString());
 		
 		return text.toString();
 	}
