@@ -152,7 +152,7 @@ public class ValidateQuery {
 			Map<String,Set<String>> tableFielNames,	Set<String> allColumnNames){
 		String tableName;
 		Set<String> fieldNames;
-		
+		columnName=SelectQuery.stripParanthesis(columnName);
 		int begin=columnName.indexOf('.');
 		if(begin > -1){
 			tableName=columnName.substring(0, begin);
@@ -166,7 +166,7 @@ public class ValidateQuery {
 			return getDataType(columnName, tableName, tableAttributes);
 			
 		}else{
-			if(!allColumnNames.contains(columnName))
+			if(!allColumnNames.contains(columnName.toLowerCase()))
 				return null;
 			Iterator<Map.Entry<String, Map<String,FieldType>>> it=tableAttributes.entrySet().iterator();
 			while(it.hasNext()){
@@ -182,7 +182,7 @@ public class ValidateQuery {
 		
 		if(tableName !=null){
 			Map<String, FieldType> fields=tableAttributes.get(tableName);
-			FieldType type=fields.get(columnName);
+			FieldType type=fields.get(columnName.toLowerCase());
 			return type.getType();
 		}
 		return null;
@@ -199,20 +199,37 @@ public class ValidateQuery {
 			Set<String> allColumnNames) throws InvalidQuery {
 		String tableName;
 		Set<String> fieldNames;
+		columnName=SelectQuery.stripParanthesis(columnName);
 		int begin=columnName.indexOf('.');
 		if(begin > -1){
 			tableName=columnName.substring(0, begin);
-			fieldNames=tableFielNames.get(tableName);
+			fieldNames=tableFielNames.get(tableName.toLowerCase());
 			if(fieldNames == null) {//unknown prefix
-				 throw  new InvalidQuery("Unknown table name " +columnName);
+				 throw  new InvalidQuery("Unknown table name: " +columnName);
 		}
 			columnName=columnName.substring(begin+1);
 			if(!fieldNames.contains(columnName)) //column name not exist
-				throw  new InvalidQuery("Unknown column name " +columnName + " in "+tableName);
+				throw  new InvalidQuery("Unknown column name: " +columnName + " in "+tableName);
 		}else{
-			if(!allColumnNames.contains(columnName))
-				throw  new InvalidQuery("Unknown column name " +columnName );
+			if(!allColumnNames.contains(columnName.toLowerCase()))
+				throw  new InvalidQuery("Unknown column name: " +columnName );
 		}
 		return true;
 	}
+	/*public static String stripParanthesis(String input){
+		int begin=0,parnCount=1;
+		while(input.charAt(begin) == ' ') begin++;
+		if(input.charAt(begin) == '('){
+			int end=begin;
+			while( parnCount != 0){
+				end++;
+				if(input.charAt(end) == '(')
+					parnCount++;
+				else if(input.charAt(end) == ')')
+					parnCount--;
+			}
+			return input.substring(begin+1, end).trim();
+		}
+		return input;
+	}*/
 }

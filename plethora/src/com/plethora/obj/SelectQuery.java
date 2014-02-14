@@ -29,10 +29,11 @@ public class SelectQuery extends Query {
 	private TGroupBy groupby;
 	private TExpression having;
 	private Set<String> resultColumnNames;
+	private String distinctString;
 	
-	public SelectQuery(TSelectSqlStatement stmt){
+	public SelectQuery(TSelectSqlStatement stmt,String rawQuery){
 		queryType=QueryType.SELECT;
-		this.columns=stmt.getResultColumnList();
+		this.columns=stmt.getResultColumnList();//TSelectSqlStatement
 		this.condition=stmt.getWhereClause();
 		this.groupby=stmt.getGroupByClause();
 		if(groupby!=null){
@@ -40,6 +41,24 @@ public class SelectQuery extends Query {
 		}
 		this.orderby=stmt.getOrderbyClause();
 		this.distinct=stmt.getSelectDistinct();
+		if(distinct != null){
+			StringBuilder text=new StringBuilder();
+			int parnCount=1;
+			int begin=rawQuery.toLowerCase().indexOf("distinct");
+			begin+=8;
+			while(rawQuery.charAt(begin) == ' ') begin++;
+			if(rawQuery.charAt(begin) == '('){
+				int end=begin;
+				while( parnCount != 0){
+					end++;
+					if(rawQuery.charAt(end) == '(')
+						parnCount++;
+					else if(rawQuery.charAt(end) == ')')
+						parnCount--;
+				}
+				distinctString=rawQuery.substring(begin+1, end).trim();
+			}
+		}
 		this.tables=new LinkedHashMap<>();
 		String tableKey;
 		for(int i=0;i<stmt.joins.size();i++){
@@ -172,7 +191,7 @@ public class SelectQuery extends Query {
     	TResultColumn resultColumn;
     	for(int i=0;i<columns.size();i++){
     		resultColumn =columns.getResultColumn(i);
-    		text.append(resultColumn.getExpr().toString()).append(",");
+    		text.append(stripParanthesis( resultColumn.getExpr().toString())).append(",");
     	}
     	text.delete(text.length()-1, text.length());
     	if(text.toString().equals("*") && resultColumnNames != null){
@@ -207,7 +226,7 @@ public class SelectQuery extends Query {
 		text.append(columnsToString()).append('\n');
 		
 		text.append("Distinct:");
-		text.append(distinct==null?"NA":distinct.toString()).append('\n');
+		text.append(distinct==null?"NA":distinctString==null?columnsToString():distinctString).append('\n');
 		
 		text.append("Condition:");
 		text.append(condition==null?"NA":condition.getCondition().toString()).append('\n');
@@ -240,5 +259,20 @@ public class SelectQuery extends Query {
 	public void setHaving(TExpression having) {
 		this.having = having;
 	}
-	
+	public static String stripParanthesis(String input){
+		int begin=0,parnCount=1;
+		while(input.charAt(begin) == ' ') begin++;
+		if(input.charAt(begin) == '('){
+			int end=begin;
+			while( parnCount != 0){
+				end++;
+				if(input.charAt(end) == '(')
+					parnCount++;
+				else if(input.charAt(end) == ')')
+					parnCount--;
+			}
+			return input.substring(begin+1, end).trim();
+		}
+		return input;
+	}
 }

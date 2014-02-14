@@ -1,1 +1,4 @@
-SELECT name,id FROM a WHERE name <> 12 GROUP BY name HAVING id > 10" ORDER BY id DESC
+SELECT name,id FROM a WHERE name <> "12" GROUP BY a.name HAVING a.id > 10 ORDER BY id DESC
+SELECT distinct id,name FROM a WHERE name <> "12" GROUP BY a.name HAVING a.id > 10 ORDER BY id DESC
+
+SELECT DISTINCT ID,NAME FROM A WHERE NAME <> "12" GROUP BY A.name HAVING a.id > 10 ORDER BY ID DESC

@@ -482,30 +482,26 @@ public class DBSystem {
 			
 		}
 	}
+	
 	public void selectCommand(String query){
 		sqlParser.sqltext=query;
 		int ret = sqlParser.parse();
 		SelectQuery q=null;
 		if(ret == 0){
 			for(int i=0;i<sqlParser.sqlstatements.size();i++){
-				q=getSelectQuery((TSelectSqlStatement)sqlParser.sqlstatements.get(i));
+				q=new SelectQuery((TSelectSqlStatement)sqlParser.sqlstatements.get(i),query);
 				ValidateQuery validateQuery=new ValidateQuery();
 				try {
 					validateQuery.validataQuery(q, tableMetaData);
 				} catch (InvalidQuery e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					return;
 				}
 				System.out.println(q);
 			}
 		}else{
 			System.out.println("Query Invalid");
 		}
-	}
-	
-	private SelectQuery  getSelectQuery(TSelectSqlStatement selectStmt){
-		SelectQuery query=new SelectQuery(selectStmt);
-		//selectStmt.getResultColumnList();
-		return query;
 	}
 }
