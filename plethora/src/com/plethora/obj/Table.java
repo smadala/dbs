@@ -1,12 +1,9 @@
 package com.plethora.obj;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class Table {
 	
@@ -15,7 +12,7 @@ public class Table {
 	private List<PageEntry> pageEntries;
 	public Table(String name) {
 		this.tableName=name;
-		this.fields=new HashMap<String,FieldType>();
+		this.fields=new LinkedHashMap<String,FieldType>();
 		this.pageEntries=new ArrayList<PageEntry>();
 	}
 	
@@ -38,5 +35,4 @@ public class Table {
 	public void setPageEntries(List<PageEntry> pageEntries) {
 		this.pageEntries = pageEntries;
 	}
-	
 }

@@ -4,18 +4,17 @@ import gudusoft.gsqlparser.nodes.TGroupByItemList;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
-import gudusoft.gsqlparser.util.TException;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import com.plethora.obj.DataType;
+import com.plethora.obj.FieldType;
 import com.plethora.obj.SelectQuery;
 import com.plethora.obj.Table;
-import com.plethora.obj.FieldType;
 import com.plethore.excp.InvalidQuery;
 
 
@@ -38,7 +37,7 @@ public class ValidateQuery {
 		}
 		
 		//validate columns
-		Set<String> allColumnNames=new HashSet<String>(3);
+		Set<String> allColumnNames=new LinkedHashSet<String>(3);
 		Map<String,Set<String>> tableFielNames=new HashMap<>(3);
 		Map<String,Map<String,FieldType>> tableAttributes=new HashMap<String,Map<String,FieldType>>(3);
 		Map<String,FieldType> fields;
@@ -110,7 +109,7 @@ public class ValidateQuery {
 		    	return false;
 		    if(leftClass.equals(rightClass))
 		    	return true;
-		return false;
+		throw new InvalidQuery("invalid condition" +condition.toString());
 	}
 	private boolean is_compare_condition( EExpressionType t )
 	{

@@ -15,6 +15,7 @@ import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -39,7 +40,7 @@ public class SelectQuery extends Query {
 		}
 		this.orderby=stmt.getOrderbyClause();
 		this.distinct=stmt.getSelectDistinct();
-		this.tables=new HashMap<>();
+		this.tables=new LinkedHashMap<>();
 		String tableKey;
 		for(int i=0;i<stmt.joins.size();i++){
             TJoin join = stmt.joins.getJoin(i);
@@ -47,7 +48,7 @@ public class SelectQuery extends Query {
                 case TBaseType.join_source_fake:
                 	tableKey=join.getTable().getAliasClause()==null?join.getTable().toString():join.getTable().getAliasClause().toString();
                 	tables.put(tableKey,join.getTable());
-                    System.out.printf("table: %s, alias: %s\n",join.getTable().toString(),(join.getTable().getAliasClause() !=null)?join.getTable().getAliasClause().toString():"");
+        //            System.out.printf("table: %s, alias: %s\n",join.getTable().toString(),(join.getTable().getAliasClause() !=null)?join.getTable().getAliasClause().toString():"");
                     break;
                 case TBaseType.join_source_table:
                     System.out.printf("table: %s, alias: %s\n",join.getTable().toString(),(join.getTable().getAliasClause() !=null)?join.getTable().getAliasClause().toString():"");
@@ -213,10 +214,10 @@ public class SelectQuery extends Query {
 		//condition.getCondition().get
 		
 		text.append("Orderby:");
-		text.append(orderby==null?"NA":orderby.toString()).append('\n');
+		text.append(orderby==null?"NA":orderby.getItems().toString()).append('\n');
 		
 		text.append("Groupby:");
-		text.append(groupby==null?"NA":groupby.toString()).append('\n');
+		text.append(groupby==null?"NA":groupby.getItems().toString()).append('\n');
 		
 		text.append("Having:");
 		text.append(having==null?"NA":having.toString()).append('\n');

@@ -1,0 +1,1 @@
+SELECT name,id FROM a WHERE name <> 12 GROUP BY name HAVING id > 10" ORDER BY id DESC
