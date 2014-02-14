@@ -39,7 +39,7 @@ public enum DataType{
 		if(x.equals(FLOAT.toString().toLowerCase())){
 			return DataType.FLOAT;
 		}
-		else if(x.equals(INTEGER.toString().toLowerCase())){
+		else if(x.equals(INTEGER.toString().toLowerCase()) || x.equals("int")){
 			return DataType.INTEGER;
 		}
 		else if(x.matches("varchar\\([0-9]+\\)")){
