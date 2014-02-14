@@ -210,6 +210,7 @@ public class SelectQuery extends Query {
 		
 		text.append("Condition:");
 		text.append(condition==null?"NA":condition.getCondition().toString()).append('\n');
+		//condition.getCondition().get
 		
 		text.append("Orderby:");
 		text.append(orderby==null?"NA":orderby.toString()).append('\n');
@@ -230,6 +231,13 @@ public class SelectQuery extends Query {
 	public void setResultColumnNames(Set<String> resultColumnNames) {
 		this.resultColumnNames = resultColumnNames;
 	}
-	
+
+	public TExpression getHaving() {
+		return having;
+	}
+
+	public void setHaving(TExpression having) {
+		this.having = having;
+	}
 	
 }

@@ -38,7 +38,5 @@ public class Table {
 	public void setPageEntries(List<PageEntry> pageEntries) {
 		this.pageEntries = pageEntries;
 	}
-
-	
 	
 }
