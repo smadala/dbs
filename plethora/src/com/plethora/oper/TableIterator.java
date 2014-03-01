@@ -20,22 +20,22 @@ public class TableIterator {
 	}
 	InputStream br;
 	ListIterator<PageEntry> pageEntries;
-	Iterator<Map.Entry<String, FieldType>> fType;
+	Iterator<Map.Entry<String, FieldType>> fieldsIt;
 	Map.Entry<String, FieldType> fmapEntry;
-	PageEntry pageData;
+	PageEntry pageEntry;
 	Page page;
 	List<Object> currentTuple;
 	Iterator<List<Object>> tupleIterator;
 	
 	boolean readBlock(){
 		if(pageEntries.hasNext()){
-			pageData=pageEntries.next();
+			pageEntry=pageEntries.next();
 			List<List<Object>> tuples=new ArrayList<List<Object>>();
 			String tokens[];
 			String line;
 			int start=0,end=0;
-			start=pageData.getStartRecordId();
-			end=pageData.getEndRecordId();
+			start=pageEntry.getStartRecordId();
+			end=pageEntry.getEndRecordId();
 			while((line=FileReader.readLine(br))!=null && start<=end){
 				List<Object> attr= new ArrayList<Object>();
 				tokens=line.split(",");
@@ -67,9 +67,9 @@ public class TableIterator {
 		try{
 			br = FileReader.getTableInputStream(table.getTableName()+".csv");
 			pageEntries=table.getPageEntries().listIterator();
-			fType=table.getFields().entrySet().iterator();
-			if(fType.hasNext()){
-				fmapEntry= fType.next();
+			fieldsIt=table.getFields().entrySet().iterator();
+			if(fieldsIt.hasNext()){
+				fmapEntry= fieldsIt.next();
 				readBlock();
 				tupleIterator=page.getRecords().iterator();
 				if(tupleIterator.hasNext()){
