@@ -5,14 +5,14 @@ import java.util.List;
 
 
 public class Page {
-	private List<String> records;
+	private List<List<Object>> records;
 	public Page(){
-		records=new ArrayList<String>();
+		records=new ArrayList<List<Object>>();
 	}
-	public List<String> getRecords() {
+	public List<List<Object>> getRecords() {
 		return records;
 	}
-	public void setRecords(List<String> records) {
+	public void setRecords(List<List<Object>> records) {
 		this.records = records;
 	}
 	

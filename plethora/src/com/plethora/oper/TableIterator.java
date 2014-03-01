@@ -5,14 +5,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.plethora.mem.DataBaseMemoryConfig;
 import com.plethora.obj.FieldType;
 import com.plethora.obj.FileReader;
 import com.plethora.obj.PageEntry;
 import com.plethora.obj.Table;
-import java.io.IOException;
 import java.io.InputStream;
 
 public class TableIterator {
@@ -22,7 +19,7 @@ public class TableIterator {
 	}
 	InputStream br;
 	ListIterator<PageEntry> pageEntries;
-	Iterator fType;
+	Iterator<Map.Entry<String, FieldType>> fType;
 	Map.Entry<String, FieldType> fmapEntry;
 	PageEntry block;
 	String tuple;
@@ -32,7 +29,7 @@ public class TableIterator {
 			br = FileReader.getTableInputStream(table.getTableName()+".csv");
 			pageEntries=table.getPageEntries().listIterator();
 			fType=table.getFields().entrySet().iterator();
-			fmapEntry=(Entry<String, FieldType>) fType.next();
+			fmapEntry= fType.next();
 			block=pageEntries.next();
 			start=0;
 			end=block.getEndRecordId();
@@ -60,14 +57,14 @@ public class TableIterator {
 		start=start+1;
 		tokens=tuple.split(",");
 		for(String attr : tokens){
-			switch(fmapEntry.getValue().getType().toString().toLowerCase()){
-			case("integer"):
+			switch(fmapEntry.getValue().getType()){
+			case INTEGER:
 				list.add(Integer.parseInt(attr));
 				break;
-			case("varchar"):
+			case VARCHAR:
 				list.add(attr);
 				break;
-			case("float"):
+			case FLOAT:
 				list.add(Float.parseFloat(attr));
 				break;
 			}

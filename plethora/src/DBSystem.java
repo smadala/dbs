@@ -1,4 +1,3 @@
-import gudusoft.gsqlparser.*;
 import gudusoft.gsqlparser.nodes.*;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.TGSqlParser;
@@ -15,7 +14,6 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.Map.Entry;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
@@ -25,7 +23,6 @@ import com.plethora.obj.FieldType;
 import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
-import com.plethora.obj.Query;
 import com.plethora.obj.Query.QueryType;
 import com.plethora.obj.SelectQuery;
 import com.plethora.obj.Table;
@@ -181,7 +178,7 @@ public class DBSystem {
 		} else {
 			System.out.println("HIT");
 		}
-		return page.getRecords().get(recordId - pageEntry.getStartRecordId());
+		return page.getRecords().get(recordId - pageEntry.getStartRecordId()).toString();
 	}
 
 	private Page loadPage(String tableName, PageEntry pageEntry) {
@@ -193,7 +190,9 @@ public class DBSystem {
 		try {
 			fileReader.seek(pageEntry.getOffset());
 			for (int i = 0; i < numOfRecords; i++) {
-				page.getRecords().add(fileReader.readLine());
+				List<Object> record=new ArrayList<>();
+				record.add(fileReader.readLine());
+				page.getRecords().add( record);
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -260,7 +259,9 @@ public class DBSystem {
 				page = loadPage(tableName, lastEntry);
 				cachedPages.put(pageKey, page);
 			}
-			page.getRecords().add(record);
+			List<Object> r=new ArrayList<>();
+			r.add(record);
+			page.getRecords().add(r);
 			lastEntry.setEndRecordId(++lastRecordId);
 		} else { // create new Page
 
@@ -273,7 +274,9 @@ public class DBSystem {
 			newEntry.setPageNumber(++lastPageNum);
 			newEntry.setOffset(offset);
 			page = new Page();
-			page.getRecords().add(record);
+			List<Object> r=new ArrayList<>();
+			r.add(record);
+			page.getRecords().add(r);
 			pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName,
 					lastPageNum);
 

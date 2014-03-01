@@ -110,6 +110,7 @@ public class ValidateQuery {
 		    Class rightClass=getType(condition.getRightOperand(), tableFielNames, allColumnNames, tableAttributes);
 		    if(leftClass == null || rightClass == null)
 		    	return false;
+		    System.out.println(condition.toString());
 		    if(leftClass.equals(rightClass))
 		    	return true;
 		throw new InvalidQuery("invalid condition" +condition.toString());
