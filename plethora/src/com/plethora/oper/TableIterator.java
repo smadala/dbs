@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.plethora.obj.FieldType;
 import com.plethora.obj.FileReader;
+import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
 import com.plethora.obj.Table;
 import java.io.InputStream;
@@ -21,56 +22,83 @@ public class TableIterator {
 	ListIterator<PageEntry> pageEntries;
 	Iterator<Map.Entry<String, FieldType>> fType;
 	Map.Entry<String, FieldType> fmapEntry;
-	PageEntry block;
-	String tuple;
-	int start=0,end=0;
+	PageEntry pageData;
+	Page page;
+	List<Object> currentTuple;
+	Iterator<List<Object>> tupleIterator;
+	
+	boolean readBlock(){
+		if(pageEntries.hasNext()){
+			pageData=pageEntries.next();
+			List<List<Object>> tuples=new ArrayList<List<Object>>();
+			String tokens[];
+			String line;
+			int start=0,end=0;
+			start=pageData.getStartRecordId();
+			end=pageData.getEndRecordId();
+			while((line=FileReader.readLine(br))!=null && start<=end){
+				List<Object> attr= new ArrayList<Object>();
+				tokens=line.split(",");
+				for(String temp : tokens){
+					switch(fmapEntry.getValue().getType()){
+					case INTEGER:
+						attr.add(Integer.parseInt(temp));
+						break;
+					case VARCHAR:
+						attr.add(temp);
+						break;
+					case FLOAT:
+						attr.add(Float.parseFloat(temp));
+						break;
+					}
+				}
+				start=start+1;
+				tuples.add(attr);
+			}
+			page=new Page();
+			page.setRecords(tuples);
+			return true;
+		}
+		else
+			return false;
+	}
+	
 	public void open(){
 		try{
 			br = FileReader.getTableInputStream(table.getTableName()+".csv");
 			pageEntries=table.getPageEntries().listIterator();
 			fType=table.getFields().entrySet().iterator();
-			fmapEntry= fType.next();
-			block=pageEntries.next();
-			start=0;
-			end=block.getEndRecordId();
-			tuple=FileReader.readLine(br);
+			if(fType.hasNext()){
+				fmapEntry= fType.next();
+				readBlock();
+				tupleIterator=page.getRecords().iterator();
+				if(tupleIterator.hasNext()){
+					currentTuple=tupleIterator.next();
+				}
+			}
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
-		
 	}
 	
 	public List<Object> getNext(){
-		String tokens[];
-		List<Object> list=new ArrayList<Object>();
-		if(start>end){
-			if(pageEntries.hasNext()){
-				block=pageEntries.next();
-				start=block.getStartRecordId();
-				end=block.getEndRecordId();
-				tuple=FileReader.readLine(br);
+		List<Object> oldTuple;
+		if(!tupleIterator.hasNext()){
+			if(readBlock()){
+				tupleIterator=page.getRecords().iterator();
+				if(tupleIterator.hasNext()){
+					currentTuple=tupleIterator.next();
+				}
 			}
 			else
 				return null;
 		}
-		start=start+1;
-		tokens=tuple.split(",");
-		for(String attr : tokens){
-			switch(fmapEntry.getValue().getType()){
-			case INTEGER:
-				list.add(Integer.parseInt(attr));
-				break;
-			case VARCHAR:
-				list.add(attr);
-				break;
-			case FLOAT:
-				list.add(Float.parseFloat(attr));
-				break;
-			}
+		oldTuple=currentTuple;
+		if(tupleIterator.hasNext()){
+			currentTuple=tupleIterator.next();
 		}
-		tuple=FileReader.readLine(br);
-		return list;
+		return oldTuple;
 	}
 	
 	public void close(){
