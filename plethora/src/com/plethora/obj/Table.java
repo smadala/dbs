@@ -14,6 +14,7 @@ public class Table {
 	public Table(String name) {
 		this.tableName=name;
 		this.fields=new LinkedHashMap<String,FieldType>();
+		
 		this.pageEntries=new ArrayList<PageEntry>();
 	}
 	
