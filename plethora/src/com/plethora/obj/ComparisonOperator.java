@@ -8,7 +8,7 @@ public enum ComparisonOperator {
    GREATERTHAN, 
    LESSTHAN,
    LIKE;
-   public boolean eval(ComparisonOperator oper, Object o1, Object o2){
+   public static boolean eval(ComparisonOperator oper, Object o1, Object o2){
 	   switch(oper){
 	   case EQUAL: 
 		   return comapre(o1, o2) == 0;
