@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
+import java.util.List;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
@@ -83,6 +84,21 @@ public class FileReader {
 		
 	}
 	
+	public static void writeLine(OutputStream outputStream, String line){
+		byte[] bytes=new byte[line.length()+1];
+		int i;
+		for(i=0;i<line.length();i++){
+			bytes[i] = (byte) line.charAt(i); 
+		}
+		bytes[i]=(byte) '\n';
+		try {
+			outputStream.write(bytes);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	//public static String getFile
 	public static InputStream getTableInputStream(String tableName){
 		File dataFile = getTableDataFile(tableName);
@@ -127,5 +143,31 @@ public class FileReader {
 		
 	}
 	
+	public static String toString(List<Object> record){
+		
+		StringBuilder text=new StringBuilder();
+		for(int i=0;i<record.size()-1;i++){
+			text.append(record.get(i)).append(',');
+			//text.append('"').append(record.get(i)).append('"').append(',');
+		}
+		text.append(record.get(record.size()-1));
+		//text.append('"').append(record.get(record.size()-1)).append('"');
+		return text.toString();
+	}
 	
+	public static void writePage(Page page,OutputStream oStream){
+		for(List<Object> record:page.getRecords()){
+			writeLine(oStream, toString(record));
+		}
+	}
+	public static void writePage(List<List<Object>> records,OutputStream oStream){
+		for(List<Object> record:records){
+			writeLine(oStream, toString(record));
+		}
+	}
+	
+	public static Table createTable(Table table, List<List<Object>> records){
+		return null;
+		
+	}
 }

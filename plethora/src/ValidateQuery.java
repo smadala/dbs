@@ -5,15 +5,20 @@ import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.plethora.obj.Condition;
 import com.plethora.obj.DataType;
 import com.plethora.obj.FieldType;
+import com.plethora.obj.OrderBy;
 import com.plethora.obj.SelectQuery;
 import com.plethora.obj.Table;
 import com.plethore.excp.InvalidQuery;
@@ -21,49 +26,68 @@ import com.plethore.excp.InvalidQuery;
 
 public class ValidateQuery {
 	
-	public boolean validataQuery(SelectQuery query,
-			Map<String,Table> tableMetaData)throws InvalidQuery 
-	{
-		//validate tablename
+	private String tableName;
+	private List<OrderBy> orderBies;
+	private List<Condition> conditions;
+	private Map<String,Table> tableMetaData;
+	private Map<String,String> allColumnNames;
+	private Map<String,Set<String>> tableFieldNames;
+	private Map<String,Map<String,FieldType>> tableAttributes;
+	
+	private SelectQuery query;
+	
+	public ValidateQuery(Map<String,Table> tableMetaData,SelectQuery query){
+		this.tableMetaData=tableMetaData;
+		this.query=query;
+		orderBies=new ArrayList<>();
+		conditions=new ArrayList<>();
 		Iterator<Map.Entry<String,TTable>> it=query.getTables().entrySet().iterator();
-		String tableName;
-		while(it.hasNext()){
-			
-			Map.Entry<String, TTable> en=it.next();
-			tableName=en.getValue().toString().toLowerCase();
-			if( !tableMetaData.containsKey(tableName) )
-				throw new InvalidQuery("Unknown table name: "+tableName);
-		}
-		
-		//validate columns
-		Map<String,String> allColumnNames=new LinkedHashMap<String,String>(3);
-		Map<String,Set<String>> tableFielNames=new HashMap<>(3);
-		Map<String,Map<String,FieldType>> tableAttributes=new HashMap<String,Map<String,FieldType>>(3);
+		String tableNamelocal;
+		allColumnNames=new LinkedHashMap<String,String>(3);
+		tableFieldNames=new HashMap<>(3);
+		tableAttributes=new HashMap<String,Map<String,FieldType>>(3);
 		Map<String,FieldType> fields;
 		Set<String> fieldNames;
 		String columnName;
 		int begin,end;
-		it=query.getTables().entrySet().iterator();
+		
 		while(it.hasNext()){
 			Map.Entry<String, TTable> en=it.next();
-			tableName=en.getValue().toString().toLowerCase();
-			fields=tableMetaData.get(tableName).getFields();
+			tableNamelocal=en.getValue().toString().toLowerCase();
+			fields=tableMetaData.get(tableNamelocal).getFields();
 			fieldNames=fields.keySet();
-			tableFielNames.put(tableName, fieldNames);
+			tableFieldNames.put(tableNamelocal, fieldNames);
 			for(String fieldName:fieldNames){
 				if(!allColumnNames.containsKey(fieldName)){
 					allColumnNames.put(fieldName,fields.get(fieldName).getName());
 				}
 			}
-			tableAttributes.put(tableName, fields);
+			tableAttributes.put(tableNamelocal, fields);
 		}
+		
+	}
+	public boolean validataQuery()throws InvalidQuery 
+	{
+		//validate tablename
+		String tableNamelocal;
+		Iterator<Map.Entry<String,TTable>>  it=query.getTables().entrySet().iterator();
+		while(it.hasNext()){
+			
+			Map.Entry<String, TTable> en=it.next();
+			tableNamelocal=en.getValue().toString().toLowerCase();
+			if( !tableMetaData.containsKey(tableNamelocal) )
+				throw new InvalidQuery("Unknown table name: "+tableNamelocal);
+		}
+		
+		//validate columns
+		String columnName;
 		if(query.columnsToString().equals("*")){
 			query.setResultColumnNames(new LinkedHashSet(allColumnNames.values()));
 		}else{ //validate given columns
 			for(int i=0;i<query.getColumns().size();i++){
 				TResultColumn column=query.getColumns().getResultColumn(i);
 				columnName=column.getExpr().toString();
-				validateColumn(columnName, tableFielNames, allColumnNames);
+				validateColumn(columnName);
 			}
 		}
 		
@@ -71,7 +95,7 @@ public class ValidateQuery {
 		if( query.getCondition() != null &&  query.getCondition().getCondition() != null){
 			
 			System.out.println(query.getCondition().getCondition());
-			if(!validateCondition(query.getCondition().getCondition(), tableFielNames, allColumnNames, tableAttributes))
+			if(!validateCondition(query.getCondition().getCondition()))
 				throw new InvalidQuery("Invalid type in condition");
 		}
 		
@@ -81,7 +105,7 @@ public class ValidateQuery {
 			String sortColumn;
 			for(int i=0;i<orderList.size();i++){
 				sortColumn=orderList.getElement(i).getStartToken().toString();
-				validateColumn(sortColumn, tableFielNames, allColumnNames);
+				validateColumn(sortColumn);
 			}
 		}
 		//validate GroupBy
@@ -90,12 +114,12 @@ public class ValidateQuery {
 			String sortColumn;
 			for(int i=0;i<groupbyList.size();i++){
 				sortColumn=groupbyList.getGroupByItem(i).toString();
-				validateColumn(sortColumn, tableFielNames, allColumnNames);
+				validateColumn(sortColumn);
 			}
 		}
 		//validate having
 		if(query.getHaving() != null){
-			if(!validateCondition(query.getHaving(), tableFielNames, allColumnNames, tableAttributes)){
+			if(!validateCondition(query.getHaving())){
 				throw new InvalidQuery("Invalid type in condition");
 			}
 		}
@@ -103,14 +127,13 @@ public class ValidateQuery {
 //		SELECT Subject, Semester, Count(*) FROM student GROUP BY Subject, Semester
 		return true;
 	}
-	private boolean validateCondition(TExpression condition,Map<String,Set<String>> tableFielNames,
-			Map<String,String> allColumnNames,Map<String,Map<String,FieldType>> tableAttributes ) throws InvalidQuery{
+	private boolean validateCondition(TExpression condition ) throws InvalidQuery{
 		if( !is_compare_condition( condition.getExpressionType( ) ))
-			return validateCondition(condition.getLeftOperand(), tableFielNames, allColumnNames, tableAttributes) && 
-					validateCondition(condition.getRightOperand(), tableFielNames, allColumnNames, tableAttributes);
+			return validateCondition(condition.getLeftOperand()) && 
+					validateCondition(condition.getRightOperand());
 		
-		    Class leftClass=getType(condition.getLeftOperand(), tableFielNames, allColumnNames, tableAttributes);
-		    Class rightClass=getType(condition.getRightOperand(), tableFielNames, allColumnNames, tableAttributes);
+		    Class leftClass=getType(condition.getLeftOperand());
+		    Class rightClass=getType(condition.getRightOperand());
 		    
 		    if(leftClass == null || rightClass == null)
 		    	return false;
@@ -127,8 +150,7 @@ public class ValidateQuery {
 				|| ( t == EExpressionType.pattern_matching_t ));
 	}
 	
-	private Class  getType(TExpression oper, Map<String,Set<String>> tableFielNames,
-			Map<String,String> allColumnNames,Map<String,Map<String,FieldType>> tableAttributes ) throws InvalidQuery{
+	private Class  getType(TExpression oper ) throws InvalidQuery{
 		String rawVal=oper.toString();
 		Map<DataType,Class> typeClasses=getTypeMap();
 		try{
@@ -145,8 +167,8 @@ public class ValidateQuery {
 			}
 			else{
 				 //try {
-					if(validateColumn(rawVal , tableFielNames, allColumnNames)){
-						DataType type=getDataType(rawVal , tableAttributes, tableFielNames, allColumnNames);
+					if(validateColumn(rawVal)){
+						DataType type=getDataType(rawVal);
 						return typeClasses.get(type);
 					}
 				/*} catch (InvalidQuery e1) {
@@ -157,22 +179,21 @@ public class ValidateQuery {
 		}
 		return null;
 	}
-	private DataType getDataType(String columnName,Map<String,Map<String,FieldType>> tableAttributes, 
-			Map<String,Set<String>> tableFielNames,	Map<String,String> allColumnNames){
+	private DataType getDataType(String columnName){
 		String tableName;
 		Set<String> fieldNames;
 		columnName=SelectQuery.stripParanthesis(columnName);
 		int begin=columnName.indexOf('.');
 		if(begin > -1){
 			tableName=columnName.substring(0, begin);
-			fieldNames=tableFielNames.get(tableName);
+			fieldNames=tableFieldNames.get(tableName);
 			if(fieldNames == null) {//unknown prefix
 				 return null;
 			}
 			columnName=columnName.substring(begin+1);
 			if(!fieldNames.contains(columnName)) //column name not exist
 				return null;
-			return getDataType(columnName, tableName, tableAttributes);
+			return getDataType(columnName, tableName);
 			
 		}else{
 			if(!allColumnNames.containsKey(columnName.toLowerCase()))
@@ -181,13 +202,13 @@ public class ValidateQuery {
 			while(it.hasNext()){
 				Map.Entry<String, Map<String,FieldType>> en=it.next();
 				if(en.getValue().get(columnName.toLowerCase())!=null){
-					return getDataType(columnName, en.getKey(), tableAttributes);
+					return getDataType(columnName, en.getKey());
 				}
 			}
 		}
 		return null;
 	}
-	private DataType getDataType(String columnName, String tableName, Map<String, Map<String,FieldType>> tableAttributes){
+	private DataType getDataType(String columnName, String tableName){
 		
 		if(tableName !=null){
 			Map<String, FieldType> fields=tableAttributes.get(tableName);
@@ -204,15 +225,14 @@ public class ValidateQuery {
 		return types;
 	}
 	
-	private boolean validateColumn(String columnName,Map<String,Set<String>> tableFielNames,
-			Map<String,String> allColumnNames) throws InvalidQuery {
+	private boolean validateColumn(String columnName) throws InvalidQuery {
 		String tableName;
 		Set<String> fieldNames;
 		columnName=SelectQuery.stripParanthesis(columnName);
 		int begin=columnName.indexOf('.');
 		if(begin > -1){
 			tableName=columnName.substring(0, begin);
-			fieldNames=tableFielNames.get(tableName.toLowerCase());
+			fieldNames=tableFieldNames.get(tableName.toLowerCase());
 			if(fieldNames == null) {//unknown prefix
 				 throw  new InvalidQuery("Unknown table name: " +columnName);
 		}

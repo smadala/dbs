@@ -297,7 +297,6 @@ public class DBSystem {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	public void pr() {
@@ -483,15 +482,16 @@ public class DBSystem {
 	}
 	
 	public void selectCommand(String query){
-		ValidateQuery validateQuery=new ValidateQuery();
+		
 		sqlParser.sqltext=query;
 		int ret = sqlParser.parse();
 		SelectQuery q=null;
 		if(ret == 0){
 			for(int i=0;i<sqlParser.sqlstatements.size();i++){
 				q=new SelectQuery((TSelectSqlStatement)sqlParser.sqlstatements.get(i),query);
+				ValidateQuery validateQuery=new ValidateQuery(tableMetaData, q);
 				try {
-					validateQuery.validataQuery(q, tableMetaData);
+					validateQuery.validataQuery();
 				} catch (InvalidQuery e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
