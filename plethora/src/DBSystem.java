@@ -494,7 +494,7 @@ public class DBSystem {
 					validateQuery.validataQuery(q, tableMetaData);
 				} catch (InvalidQuery e) {
 					// TODO Auto-generated catch block
-					//e.printStackTrace();
+					e.printStackTrace();
 					System.out.println("Query Invalid");
 					return;
 				}

@@ -18,8 +18,8 @@ public class TableIterator {
 	public TableIterator(Table table){
 		this.table=table;
 	}
-	InputStream br;
-	ListIterator<PageEntry> pageEntries;
+	InputStream iStream;
+	Iterator<PageEntry> pageEntries;
 	Iterator<Map.Entry<String, FieldType>> fieldsIt;
 	Map.Entry<String, FieldType> fmapEntry;
 	PageEntry pageEntry;
@@ -27,7 +27,7 @@ public class TableIterator {
 	List<Object> currentTuple;
 	Iterator<List<Object>> tupleIterator;
 	
-	boolean readBlock(){
+	boolean readBlock( ){
 		if(pageEntries.hasNext()){
 			pageEntry=pageEntries.next();
 			List<List<Object>> tuples=new ArrayList<List<Object>>();
@@ -36,7 +36,7 @@ public class TableIterator {
 			int start=0,end=0;
 			start=pageEntry.getStartRecordId();
 			end=pageEntry.getEndRecordId();
-			while((line=FileReader.readLine(br))!=null && start<=end){
+			while((line=FileReader.readLine(iStream))!=null && start<=end){
 				List<Object> attr= new ArrayList<Object>();
 				tokens=line.split(",");
 				for(String temp : tokens){
@@ -65,7 +65,7 @@ public class TableIterator {
 	
 	public void open(){
 		try{
-			br = FileReader.getTableInputStream(table.getTableName()+".csv");
+			iStream = FileReader.getTableInputStream(table.getTableName()+".csv");
 			pageEntries=table.getPageEntries().listIterator();
 			fieldsIt=table.getFields().entrySet().iterator();
 			if(fieldsIt.hasNext()){
@@ -103,7 +103,7 @@ public class TableIterator {
 	
 	public void close(){
 		try{
-			br.close();
+			iStream.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();

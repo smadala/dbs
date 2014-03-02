@@ -69,6 +69,8 @@ public class ValidateQuery {
 		
 		//validate condition
 		if( query.getCondition() != null &&  query.getCondition().getCondition() != null){
+			
+			System.out.println(query.getCondition().getCondition());
 			if(!validateCondition(query.getCondition().getCondition(), tableFielNames, allColumnNames, tableAttributes))
 				throw new InvalidQuery("Invalid type in condition");
 		}
@@ -106,8 +108,10 @@ public class ValidateQuery {
 		if( !is_compare_condition( condition.getExpressionType( ) ))
 			return validateCondition(condition.getLeftOperand(), tableFielNames, allColumnNames, tableAttributes) && 
 					validateCondition(condition.getRightOperand(), tableFielNames, allColumnNames, tableAttributes);
+		
 		    Class leftClass=getType(condition.getLeftOperand(), tableFielNames, allColumnNames, tableAttributes);
 		    Class rightClass=getType(condition.getRightOperand(), tableFielNames, allColumnNames, tableAttributes);
+		    
 		    if(leftClass == null || rightClass == null)
 		    	return false;
 		    System.out.println(condition.toString());
@@ -117,6 +121,7 @@ public class ValidateQuery {
 	}
 	private boolean is_compare_condition( EExpressionType t )
 	{
+		//System.out.println(t);
 		return ( ( t == EExpressionType.simple_comparison_t )
 				|| ( t == EExpressionType.group_comparison_t ) || ( t == EExpressionType.in_t ) 
 				|| ( t == EExpressionType.pattern_matching_t ));

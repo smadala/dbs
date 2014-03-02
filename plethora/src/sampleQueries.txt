@@ -1,10 +1,1 @@
-SELECT name,id FROM a WHERE name <> "12" GROUP BY a.name HAVING a.id > 10 ORDER BY id DESC
-SELECT distinct id,name FROM a WHERE name <> "12" GROUP BY a.name HAVING a.id > 10 ORDER BY id DESC
-
-SELECT DISTINCT ID,NAME FROM A WHERE NAME <> "12" GROUP BY A.name HAVING a.id > 10 ORDER BY ID DESC
-
-create table aC(Id Int,nAmE vArchAr(10),sAlAry flOAt)
-create table A(id integer, name varchar(20))
-create table b(id adfdf)
-create table b1(id)
-create table b(id )
+select * from ac where id = 10 or name = "satya" and salary = "110"
