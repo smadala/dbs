@@ -1,7 +1,9 @@
 package com.plethora.obj;
 
 public class Condition {
-	ComparisonOperator operator;
-	int AttributePos;
-	Object val;
+
+	public ComparisonOperator operator;
+	public int AttributePos;
+	public Object val;
+
 }

@@ -71,11 +71,18 @@ public class DBSystem {
 					Map<String,FieldType> fields=new HashMap<String,FieldType>();
 					while(!(line.equals(ConfigConstants.TABLE_END))){
 						tokens=line.split(",");
-						FieldType fd=new FieldType();
-						fd.setName(tokens[0]);
-						fd.setType(DataType.isValidDataType(tokens[1]));
-						fields.put(tokens[0].toLowerCase(), fd);
-						line=FileReader.readLine(br);
+						if(!(tokens[0].equals(ConfigConstants.PRIMARY_KEY))){
+							FieldType fd=new FieldType();
+							fd.setName(tokens[0]);
+							fd.setType(DataType.isValidDataType(tokens[1]));
+							fields.put(tokens[0].toLowerCase(), fd);
+							line=FileReader.readLine(br);
+						}
+						else{
+							FieldType tempFd=fields.get(tokens[1].toLowerCase());
+							tempFd.setIsPrimaryKey(true);
+							fields.put(tokens[1].toLowerCase(), tempFd);
+						}
 					}
 					temp.setFields(fields);
 					tableMetaData.put(tableb.toLowerCase(), temp);
