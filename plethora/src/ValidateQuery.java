@@ -199,7 +199,7 @@ public class ValidateQuery {
 	private Map<DataType,Class> getTypeMap(){
 		Map<DataType,Class> types=new HashMap<DataType,Class>();
 		types.put(DataType.INTEGER, Integer.class);
-		types.put(DataType.FLOAT, Integer.class);
+		types.put(DataType.FLOAT, Float.class);
 		types.put(DataType.VARCHAR, String.class);
 		return types;
 	}

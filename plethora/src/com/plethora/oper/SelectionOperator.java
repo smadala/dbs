@@ -20,7 +20,6 @@ public class SelectionOperator {
 	}*/
 	public List<Object> select(List<Object> records, List<Condition> conditions, 
 			List<LogicalOperator> logicalOper){
-		List<List<Object>> resultRecords=new ArrayList<>();
 		
 		return null;
 	}
