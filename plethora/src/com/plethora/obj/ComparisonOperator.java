@@ -11,13 +11,23 @@ public enum ComparisonOperator {
    public boolean eval(ComparisonOperator oper, Object o1, Object o2){
 	   switch(oper){
 	   case EQUAL: 
-		   return o1.equals(o2);
+		   return comapre(o1, o2) == 0;
 	   case GREATER_AND_EQUAL:
-		   int diff=comapre(o1, o2);
-		   return diff >=0;
+		   return comapre(o1, o2) >= 0;
+	   case LESSTHAN_AND_EQUAL:
+		   return comapre(o1, o2) <= 0;
+	   case NOT_EQUAL:
+		   return comapre(o1, o2) != 0;
+	   case GREATERTHAN:
+		   return comapre(o1, o2) > 0;
+	   case LESSTHAN:
+		   return comapre(o1, o2) < 0;
+	   case LIKE:
+		   return o1.toString().equalsIgnoreCase(o2.toString());
 	   }
-	   return true;
+	   return true; 
    }
+   
    public static int comapre(Object o1,Object o2){
 	   int diff=0;
 	   if( o1 instanceof Integer)

@@ -13,9 +13,7 @@ public class OrderByOperator {
 	
 		
 	}
-	private void sort(List<List<Object>> records, List<OrderBy> ordeBies, int orderbypos){
-		
-	}
+	
 	
 	
 	public void mergeList(){
