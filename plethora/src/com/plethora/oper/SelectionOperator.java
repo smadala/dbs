@@ -23,6 +23,8 @@ public class SelectionOperator {
 	}*/
 	public List<Object> select(List<Object> record, List<Condition> conditions, 
 			List<LogicalOperator> logicalOper){
+		if(conditions==null || conditions.isEmpty()==true)
+			return record;
 		Iterator<Condition> conditionIterator=conditions.iterator();
 		Iterator<LogicalOperator> logOperIterator;
 		boolean logicalOutput[]=new boolean[conditions.size()];;
