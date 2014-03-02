@@ -6,7 +6,13 @@ public class FieldType {
 	private String name;
 	private DataType type;
 	private int size;
-	
+	private boolean isPrimaryKey;
+	public boolean getIsPrimaryKey(){
+		return isPrimaryKey;
+	}
+	public void setIsPrimaryKey(boolean x){
+		isPrimaryKey=x;
+	}
 	public String getName() {
 		return name;
 	}

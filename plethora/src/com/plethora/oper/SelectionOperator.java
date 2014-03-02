@@ -95,6 +95,7 @@ public class SelectionOperator {
 		condi3.val=8;
 		condi3.operator=ComparisonOperator.LESSTHAN;
 		conditions.add(condi3);
+		
 		List<LogicalOperator> logicalOperation=new ArrayList<LogicalOperator>();
 		logicalOperation.add(LogicalOperator.AND);
 		logicalOperation.add(LogicalOperator.OR);
