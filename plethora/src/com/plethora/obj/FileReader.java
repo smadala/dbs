@@ -168,6 +168,12 @@ public class FileReader {
 		}
 	}
 	
+	public static Table cloneTable(Table table, String tableName){
+		Table clTable= new Table(tableName);
+		clTable.setFields(table.getFields());
+		return clTable;
+	}
+	
 	public static Table createTable(Table table, List<List<Object>> records){
 		return null;
 	}
