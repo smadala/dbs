@@ -46,26 +46,40 @@ public class OrderByOperator {
 		//FileReader.writePage(records, oStream);
 	}
 	
-	public void merge(  ){
+	public void merge(){
+		//implement n phase merge currently two phase
+		resultTable=merge(subTables);
+	}
+	
+	public Table merge(List<Table> subTables){
 		int size=subTables.size();
 		List<TableIterator> tableIterators=new ArrayList<>(size);
+		Table resultTable=null;
+		TableWriter tableWriter=new TableWriter(resultTable);
 		for(Table table:subTables){
 			tableIterators.add(new TableIterator(table));
 		}
-		
+		MergeRecord mergeRecord;
+		List<Object> record;
 		PriorityQueue<MergeRecord> pq=new PriorityQueue<>(size, new MergeLineOrderBySort(orderBies));
 		for(int i=0;i<size;i++){
-			
+			record=tableIterators.get(i).getNext();
+			if(record != null){
+			pq.add( new MergeRecord( record, i));
+			}
 		}
+		
 		
 		while(pq.isEmpty()){
-			MergeRecord mergeRecord=pq.poll();
-			pq.add(new MergeRecord( tableIterators.get(mergeRecord.subTableIndex).getNext() , mergeRecord.subTableIndex));
-			
+			mergeRecord=pq.poll();
+			tableWriter.write(mergeRecord.record);
+			record=tableIterators.get(mergeRecord.subTableIndex).getNext();
+			if(record != null){
+			pq.add( new MergeRecord( record, mergeRecord.subTableIndex));
+			}
 		}
-		
+		return resultTable;
 	}
-	
 	
 	public class OrderBySort implements Comparator<List<Object>>{
 		private List<OrderBy> orderBies;

@@ -6,7 +6,6 @@ import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -17,10 +16,13 @@ import java.util.Set;
 
 import com.plethora.obj.Condition;
 import com.plethora.obj.DataType;
+import com.plethora.obj.Expression;
 import com.plethora.obj.FieldType;
 import com.plethora.obj.OrderBy;
+import com.plethora.obj.Select;
 import com.plethora.obj.SelectQuery;
 import com.plethora.obj.Table;
+import com.plethora.obj.WhereClause;
 import com.plethore.excp.InvalidQuery;
 
 
@@ -35,6 +37,7 @@ public class ValidateQuery {
 	private Map<String,Map<String,FieldType>> tableAttributes;
 	
 	private SelectQuery query;
+	private Select select;
 	
 	public ValidateQuery(Map<String,Table> tableMetaData,SelectQuery query){
 		this.tableMetaData=tableMetaData;
@@ -64,7 +67,7 @@ public class ValidateQuery {
 			}
 			tableAttributes.put(tableNamelocal, fields);
 		}
-		
+		select=new Select();
 	}
 	public boolean validataQuery()throws InvalidQuery 
 	{
@@ -75,23 +78,31 @@ public class ValidateQuery {
 			
 			Map.Entry<String, TTable> en=it.next();
 			tableNamelocal=en.getValue().toString().toLowerCase();
-			if( !tableMetaData.containsKey(tableNamelocal) )
+			Table table = tableMetaData.get(tableNamelocal);
+			if( table == null )
 				throw new InvalidQuery("Unknown table name: "+tableNamelocal);
+			select.table=table;
 		}
 		
 		//validate columns
 		String columnName;
+		List<Expression> projCols=new ArrayList<>();
+		Expression projCol=null;
 		if(query.columnsToString().equals("*")){
 			query.setResultColumnNames(new LinkedHashSet(allColumnNames.values()));
+			
 		}else{ //validate given columns
 			for(int i=0;i<query.getColumns().size();i++){
 				TResultColumn column=query.getColumns().getResultColumn(i);
 				columnName=column.getExpr().toString();
 				validateColumn(columnName);
+				projCol=new Expression(select.table.getColumnPos(columnName));
+				projCols.add(projCol);
 			}
 		}
-		
+		select.projCols=projCols;
 		//validate condition
+		WhereClause where=new WhereClause();
 		if( query.getCondition() != null &&  query.getCondition().getCondition() != null){
 			
 			System.out.println(query.getCondition().getCondition());

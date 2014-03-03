@@ -3,6 +3,8 @@ package com.plethora.obj;
 import java.util.List;
 
 public class Expression {
-	public List<Integer> columnPos;
-	
+	public int columnPos;
+	public Expression( int columnPos){
+		this.columnPos=columnPos;
+	}
 }

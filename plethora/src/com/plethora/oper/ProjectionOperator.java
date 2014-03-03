@@ -27,7 +27,7 @@ public class ProjectionOperator {
 		
 			for(Expression expr:exprs){
 				//expr eval should happen here... current assumed only one column
-				resultRecord.add(records.get(expr.columnPos.get(0)));
+				resultRecord.add(records.get(expr.columnPos));
 			}
 		return resultRecord;
 	}

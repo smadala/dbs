@@ -1,17 +1,17 @@
 package com.plethora.oper;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 import com.plethora.obj.FieldType;
 import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
 import com.plethora.obj.Table;
-import java.io.InputStream;
 
 public class TableIterator {
 	private Table table;
@@ -20,38 +20,24 @@ public class TableIterator {
 	}
 	InputStream iStream;
 	Iterator<PageEntry> pageEntries;
-	Iterator<Map.Entry<String, FieldType>> fieldsIt;
+	Iterator<FieldType> fieldsIt;
 	Map.Entry<String, FieldType> fmapEntry;
 	PageEntry pageEntry;
 	Page page;
 	List<Object> currentTuple;
 	Iterator<List<Object>> tupleIterator;
+	Set<FieldType> fields; 
 	
 	boolean readBlock( ){
 		if(pageEntries.hasNext()){
 			pageEntry=pageEntries.next();
 			List<List<Object>> tuples=new ArrayList<List<Object>>();
-			String tokens[];
 			String line;
 			int start=0,end=0;
 			start=pageEntry.getStartRecordId();
 			end=pageEntry.getEndRecordId();
 			while((line=FileReader.readLine(iStream))!=null && start<=end){
-				List<Object> attr= new ArrayList<Object>();
-				tokens=line.split(",");
-				for(String temp : tokens){
-					switch(fmapEntry.getValue().getType()){
-					case INTEGER:
-						attr.add(Integer.parseInt(temp));
-						break;
-					case VARCHAR:
-						attr.add(temp);
-						break;
-					case FLOAT:
-						attr.add(Float.parseFloat(temp));
-						break;
-					}
-				}
+				List<Object> attr=FileReader.getTuple(line, fieldsIt);
 				start=start+1;
 				tuples.add(attr);
 			}
@@ -65,16 +51,14 @@ public class TableIterator {
 	
 	public void open(){
 		try{
-			iStream = FileReader.getTableInputStream(table.getTableName()+".csv");
-			pageEntries=table.getPageEntries().listIterator();
-			fieldsIt=table.getFields().entrySet().iterator();
-			if(fieldsIt.hasNext()){
-				fmapEntry= fieldsIt.next();
-				readBlock();
+			iStream = FileReader.getTableInputStream(table.getTableName());
+			pageEntries=table.getPageEntries().iterator();
+			fieldsIt=table.getFields().values().iterator();
+			if(readBlock()){
 				tupleIterator=page.getRecords().iterator();
-				if(tupleIterator.hasNext()){
+				/*if(tupleIterator.hasNext()){
 					currentTuple=tupleIterator.next();
-				}
+				}*/
 			}
 		}
 		catch(Exception e){
@@ -82,23 +66,22 @@ public class TableIterator {
 		}
 	}
 	
+	
 	public List<Object> getNext(){
-		List<Object> oldTuple;
 		if(!tupleIterator.hasNext()){
 			if(readBlock()){
 				tupleIterator=page.getRecords().iterator();
-				if(tupleIterator.hasNext()){
-					currentTuple=tupleIterator.next();
-				}
-			}
-			else
+				if(tupleIterator.hasNext())
+					return tupleIterator.next();
 				return null;
+			}
+			return null;
 		}
-		oldTuple=currentTuple;
+		/*oldTuple=currentTuple;
 		if(tupleIterator.hasNext()){
 			currentTuple=tupleIterator.next();
-		}
-		return oldTuple;
+		}*/
+		return tupleIterator.next();
 	}
 	
 	public void close(){

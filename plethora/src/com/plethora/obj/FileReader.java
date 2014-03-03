@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import com.plethora.mem.ConfigConstants;
@@ -168,6 +170,28 @@ public class FileReader {
 	
 	public static Table createTable(Table table, List<List<Object>> records){
 		return null;
+	}
+public static List<Object> getTuple(String record,Iterator<FieldType> fieldsIt){
 		
+		List<Object> tuple=new ArrayList<>();
+		String []tokens=record.split(",");
+		Iterator<FieldType> it=fieldsIt;
+		FieldType field=null;
+		int i=0;Object val=null; String token;
+		
+		while( it.hasNext()){
+			token = tokens[i++];
+			field=it.next();
+			switch(field.getType()){
+			case INTEGER:
+				val=Integer.parseInt(token);
+			case VARCHAR:
+				val=Float.parseFloat(token);
+			case FLOAT:
+				val=token;
+			}
+			tuple.add(val);
+		}
+		return tuple;
 	}
 }
