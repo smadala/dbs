@@ -26,6 +26,7 @@ import com.plethora.obj.PageEntry;
 import com.plethora.obj.Query.QueryType;
 import com.plethora.obj.SelectQuery;
 import com.plethora.obj.Table;
+import com.plethora.oper.TableWriter;
 import com.plethore.excp.InvalidQuery;
 
 public class DBSystem {
@@ -51,6 +52,7 @@ public class DBSystem {
 					tokens = line.split(ConfigConstants.PROPS_DELIMITER);
 					// memoryProps.put(tokens[0],tokens[1]);
 					if (tokens[0].equals(ConfigConstants.PAGESIZE)) {
+					//	System.out.println("In Main method "+Integer.parseInt(tokens[1]));
 						DataBaseMemoryConfig.PAGE_SIZE = Integer
 								.parseInt(tokens[1]);
 					} else if (tokens[0].equals(ConfigConstants.NUM_PAGES)) {
@@ -346,7 +348,33 @@ public class DBSystem {
 	public static void main(String args[]){
 		DataBaseMemoryConfig.PATH_FOR_CONF_FILE=args[0];
 		DBSystem obj=new DBSystem();
-		String query;
+		obj.readConfig(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
+		Table table=new Table("temp");
+		List<Object> record=new ArrayList<>();
+		//record.add("Harsha");
+		//record.add("Vardhan");
+		record.add(8);
+		TableWriter tableWriter=new TableWriter(table);
+		tableWriter.open();
+		tableWriter.write(record);
+		record=new ArrayList<>();
+		record.add("H");
+		record.add("V");
+		tableWriter.write(record);
+		record=new ArrayList<>();
+		record.add("ar");
+		record.add("Var");
+		tableWriter.write(record);
+		record=new ArrayList<>();
+		record.add("rsa");
+		record.add("rdn");
+		tableWriter.write(record);
+		record=new ArrayList<>();
+		record.add("H");
+		record.add("Va");
+		tableWriter.write(record);
+		System.out.println("Hello");
+	/*	String query;
 		obj.readConfig(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
 		try{
 			InputStream br=new FileInputStream(args[1]);
@@ -357,7 +385,7 @@ public class DBSystem {
 		}
 		catch(Exception e){
 			e.printStackTrace();
-		}
+		}*/
 		
 	}
 

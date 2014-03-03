@@ -159,6 +159,7 @@ public class FileReader {
 	
 	public static void writePage(Page page,OutputStream oStream){
 		for(List<Object> record:page.getRecords()){
+			System.out.println(record.toString());
 			writeLine(oStream, toString(record));
 		}
 	}

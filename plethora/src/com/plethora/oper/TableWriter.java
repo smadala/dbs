@@ -28,28 +28,28 @@ public class TableWriter {
 		OStream=FileReader.getTableOutputStream(table.getTableName());
 		lastPage=new Page();
 		lastPageEntry=createPageEntry(0, 0, 0);
+		System.out.println("In Open "+lastPageEntry.getLeftOver());
+		System.out.println("PageSize "+DataBaseMemoryConfig.PAGE_SIZE);
 		pageNumbers=pageNumbers+1;
 		table.getPageEntries().add(lastPageEntry);
 	}
 	
 	public void write(List<Object> record){
-		
-		stringBuilder.append(FileReader.toString(record)).append("\n");		
 		List<PageEntry> pageEntries = table.getPageEntries();
 		lastPageEntry = pageEntries.get(pageEntries.size() - 1);
 		int lastRecordId = lastPageEntry.getEndRecordId();
 		long offset = lastPageEntry.getOffset()
 				+ (DataBaseMemoryConfig.PAGE_SIZE - lastPageEntry.getLeftOver());
-
-		if (lastPageEntry.canAddRecord(stringBuilder.toString())) { // space available in lastPage
-			List<Object> r=new ArrayList<>();
-			r.add(record);
-			lastPage.getRecords().add(r);
+        String test=stringBuilder.toString()+FileReader.toString(record)+'\n';
+		if (lastPageEntry.canAddRecord(test)) { // space available in lastPage
+			stringBuilder.append(FileReader.toString(record)).append("\n");	
+			lastPage.getRecords().add(record);
 			lastPageEntry.setEndRecordId(++lastRecordId);
 		} else { // create new Page
 			table.getPageEntries().add(lastPageEntry);
 			//add the lastpage to repository , cachedPages may be.!
-			FileReader.writePage(lastPage, OStream);
+			stringBuilder.deleteCharAt(stringBuilder.length()-1);
+			FileReader.writeLine(OStream, stringBuilder.toString());
 			
 			stringBuilder=new StringBuilder();
 			stringBuilder.append(FileReader.toString(record)).append("\n");
@@ -63,9 +63,7 @@ public class TableWriter {
 			table.getPageEntries().add(lastPageEntry);
 			
 			lastPage = new Page();
-			List<Object> r=new ArrayList<>();
-			r.add(record);
-			lastPage.getRecords().add(r);
+			lastPage.getRecords().add(record);
 		}
 
 	}
@@ -87,8 +85,8 @@ public class TableWriter {
 			e.printStackTrace();
 		}
 	}
-	public static void main(String args[]){
-		Table table=new Table("temp");
+/*	public void testing(Table table){
+		
 		//DBSystem ob=new DBSystem();Can't create instance of default package's class.
 		List<Object> record=new ArrayList();
 		record.add("Harsha");
@@ -117,5 +115,5 @@ public class TableWriter {
 		record.add("Vardhan");
 		record.add(8);
 		tableWriter.write(record);
-	}
+	}*/
 }
