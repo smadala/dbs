@@ -8,4 +8,5 @@ public class Select {
 	public List<OrderBy> orderBies;
 	public List<Expression> projCols;
 	public WhereClause where;
+	public WhereClause having;
 }

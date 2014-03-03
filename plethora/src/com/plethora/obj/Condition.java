@@ -5,5 +5,5 @@ public class Condition {
 	public ComparisonOperator operator;
 	public int AttributePos;
 	public Object val;
-
+    
 }

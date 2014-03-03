@@ -47,7 +47,7 @@ public class Table {
 		this.pageEntries = pageEntries;
 	}
 	
-	public int getColumnPos(String column){
+	public Integer getColumnPos(String column){
 		return fieldPos.get(column);
 	}
 }

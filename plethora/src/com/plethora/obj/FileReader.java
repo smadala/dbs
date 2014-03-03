@@ -168,14 +168,11 @@ public class FileReader {
 		}
 	}
 	
-	public static Table createTable(Table table, List<List<Object>> records){
-		return null;
-	}
-public static List<Object> getTuple(String record,Iterator<FieldType> fieldsIt){
+	
+	public static List<Object> getTuple(String record,Iterator<FieldType> it){
 		
 		List<Object> tuple=new ArrayList<>();
 		String []tokens=record.split(",");
-		Iterator<FieldType> it=fieldsIt;
 		FieldType field=null;
 		int i=0;Object val=null; String token;
 		

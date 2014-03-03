@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.plethora.obj.ComparisonOperator;
 import com.plethora.obj.Condition;
 import com.plethora.obj.DataType;
 import com.plethora.obj.Expression;
@@ -38,6 +39,12 @@ public class ValidateQuery {
 	
 	private SelectQuery query;
 	private Select select;
+	public static Map<ComparisonOperator,EExpressionType> compMap;
+	
+	static{
+	compMap=new HashMap<>();
+	compMap.put(ComparisonOperator.EQUAL, EExpressionType.simple_comparison_t);
+	}
 	
 	public ValidateQuery(Map<String,Table> tableMetaData,SelectQuery query){
 		this.tableMetaData=tableMetaData;
@@ -106,7 +113,7 @@ public class ValidateQuery {
 		if( query.getCondition() != null &&  query.getCondition().getCondition() != null){
 			
 			System.out.println(query.getCondition().getCondition());
-			if(!validateCondition(query.getCondition().getCondition()))
+			if(!validateCondition(query.getCondition().getCondition(),where))
 				throw new InvalidQuery("Invalid type in condition");
 		}
 		
@@ -128,20 +135,22 @@ public class ValidateQuery {
 				validateColumn(sortColumn);
 			}
 		}
+		
 		//validate having
+		WhereClause having=new WhereClause();
 		if(query.getHaving() != null){
-			if(!validateCondition(query.getHaving())){
+			if(!validateCondition(query.getHaving(),having)){
 				throw new InvalidQuery("Invalid type in condition");
 			}
 		}
-		
+		select.having=having;
 //		SELECT Subject, Semester, Count(*) FROM student GROUP BY Subject, Semester
 		return true;
 	}
-	private boolean validateCondition(TExpression condition ) throws InvalidQuery{
+	private boolean validateCondition(TExpression condition ,WhereClause where) throws InvalidQuery{
 		if( !is_compare_condition( condition.getExpressionType( ) ))
-			return validateCondition(condition.getLeftOperand()) && 
-					validateCondition(condition.getRightOperand());
+			return validateCondition(condition.getLeftOperand(),where) && 
+					validateCondition(condition.getRightOperand(),where);
 		
 		    Class leftClass=getType(condition.getLeftOperand());
 		    Class rightClass=getType(condition.getRightOperand());
@@ -151,7 +160,20 @@ public class ValidateQuery {
 		    System.out.println(condition.toString());
 		    if(leftClass.equals(rightClass))
 		    	return true;
-		throw new InvalidQuery("invalid condition" +condition.toString());
+		throw new InvalidQuery("invalid condition " +condition.toString());
+	}
+	
+	
+	private Condition getCondition(TExpression condition){
+		TExpression lCond=condition.getLeftOperand(), rCond=condition.getRightOperand(); 
+		String lopar=lCond.toString().toLowerCase();
+		String ropar=rCond.toString().toLowerCase();
+		if( select.table.getColumnPos(lopar) != null ){
+			
+		}else if(select.table.getColumnPos(ropar) != null ){
+			
+		}
+		return null;
 	}
 	private boolean is_compare_condition( EExpressionType t )
 	{
@@ -160,6 +182,7 @@ public class ValidateQuery {
 				|| ( t == EExpressionType.group_comparison_t ) || ( t == EExpressionType.in_t ) 
 				|| ( t == EExpressionType.pattern_matching_t ));
 	}
+	
 	
 	private Class  getType(TExpression oper ) throws InvalidQuery{
 		String rawVal=oper.toString();

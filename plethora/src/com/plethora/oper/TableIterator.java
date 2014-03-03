@@ -21,7 +21,6 @@ public class TableIterator {
 	InputStream iStream;
 	Iterator<PageEntry> pageEntries;
 	Iterator<FieldType> fieldsIt;
-	Map.Entry<String, FieldType> fmapEntry;
 	PageEntry pageEntry;
 	Page page;
 	List<Object> currentTuple;
