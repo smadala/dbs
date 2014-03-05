@@ -31,7 +31,7 @@ public class SelectionOperator {
 		boolean decider=false;
 		Condition condition;
 		int position=0;
-		int track=0;
+		int track=0;//number of conditions
 		Object attribute;
 		while(conditionIterator.hasNext()){
 			 condition=conditionIterator.next();
@@ -41,9 +41,8 @@ public class SelectionOperator {
 			 track=track+1;
 		}
 		LogicalOperator logicalOperator;
-		track=track-1;
 		int i=0;
-		if(track!=-1 && logicalOper!=null && logicalOper.isEmpty()==false){
+		if(track>1  && logicalOper.isEmpty()==false){
 			logOperIterator=logicalOper.iterator();
 			while(logOperIterator.hasNext()){
 				logicalOperator=logOperIterator.next();
@@ -69,7 +68,9 @@ public class SelectionOperator {
 				}
 			}
 		}
-		if(decider==true || track==-1 || track==0)
+		if(decider==true || track==0)
+			return record;
+		else if(track==1 && logicalOutput[0]==true)
 			return record;
 		else
 			return null;
