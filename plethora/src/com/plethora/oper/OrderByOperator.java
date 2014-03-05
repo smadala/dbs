@@ -105,7 +105,7 @@ public class OrderByOperator {
 		private int compare(List<Object> o1, List<Object> o2, OrderBy orderBy){
 			int diff;
 			Object o1i=o1.get(orderBy.attributePos);
-			Object o2i=o1.get(orderBy.attributePos);
+			Object o2i=o2.get(orderBy.attributePos);
 			diff=ComparisonOperator.comapre(o1i, o2i);
 			if(orderBy.desc)
 				diff=diff*-1; //make reverse

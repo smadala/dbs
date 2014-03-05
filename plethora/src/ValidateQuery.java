@@ -178,7 +178,7 @@ public class ValidateQuery {
 	private Condition getCondition(TExpression tCondition){
 		TExpression lCond=tCondition.getLeftOperand(), rCond=tCondition.getRightOperand(); 
 		String lopar=lCond.toString().toLowerCase();
-		String ropar=rCond.toString().toLowerCase();
+		String ropar=stripQuotes(rCond.toString());
 		Condition condition=new Condition();
 		Integer pos=select.table.getColumnPos(lopar);
 		condition.attributePos=pos;
@@ -194,7 +194,7 @@ public class ValidateQuery {
 		if( type == DataType.INTEGER)
 			return Integer.parseInt(val);
 		else if( type == DataType.VARCHAR)
-			return val;
+			return val.toString();
 		return Float.parseFloat(val);
 	}
 	
@@ -309,20 +309,23 @@ public class ValidateQuery {
 		this.select = select;
 	}
 	
-	/*public static String stripParanthesis(String input){
-		int begin=0,parnCount=1;
-		while(input.charAt(begin) == ' ') begin++;
-		if(input.charAt(begin) == '('){
-			int end=begin;
-			while( parnCount != 0){
-				end++;
-				if(input.charAt(end) == '(')
-					parnCount++;
-				else if(input.charAt(end) == ')')
-					parnCount--;
-			}
-			return input.substring(begin+1, end).trim();
-		}
-		return input;
-	}*/
+	public static String stripQuotes(String input){
+		if(input == null || input.isEmpty())
+			return input;
+		boolean start=false,end=false;int len=input.length();
+		if( input.charAt(0) == '"' || input.charAt(0) == '\'')
+			start=true;
+		
+		if( input.charAt(len-1) == '"' || input.charAt(len-1) == '\'' )
+			end=true;
+		if( !start && !end)
+			return input;
+		else if(start && end)
+			return input.substring(1, len-1);
+		else if (start)
+			return input.substring(1);
+		else 
+			return input.substring(0,len-1);
+		
+	}
 }

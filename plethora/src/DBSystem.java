@@ -545,7 +545,7 @@ public class DBSystem {
 				 if(record == null)
 					 continue;
 				 
-				 projectionOperator.project(record, select.projCols);
+				 record=projectionOperator.project(record, select.projCols);
 				 System.out.println(record);
 			 }
 		}else{
@@ -560,8 +560,8 @@ public class DBSystem {
 			 }
 			 orderByOperator.sort(records, select.orderBies);
 			 for(List<Object> r:records){
-				 projectionOperator.project(record, select.projCols);
-			 	 System.out.println(record);
+				 r=projectionOperator.project(r, select.projCols);
+			 	 System.out.println(r);
 			 } 
 		}
 	}

@@ -74,6 +74,13 @@ public class SelectionOperator {
 			return record;
 		else
 			return null;
+		
+		
+		/*if(conditions.isEmpty())
+			return record;*/
+		
+		
+		
 	}
 	/*public static void main(String args[]){
 		List<Object> record=new ArrayList<Object>();
