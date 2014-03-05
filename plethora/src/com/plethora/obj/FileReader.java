@@ -10,7 +10,6 @@ import java.io.RandomAccessFile;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import com.plethora.mem.ConfigConstants;
@@ -233,5 +232,24 @@ public class FileReader {
 	public static String getCacheKey(String tableName, int pageNumber ){
 		return MessageFormat.format(DataBaseMemoryConfig.LRU_MEMORY_KEY_FORMAT, tableName,
 				pageNumber);
+	}
+	
+	public static Page loadPage(String tableName, PageEntry pageEntry, List<FieldType> types, RandomAccessFile fileReader ) {
+		
+		String record;
+		Page page = new Page();
+		int numOfRecords = pageEntry.getEndRecordId()
+				- pageEntry.getStartRecordId() + 1;
+		try {
+			fileReader.seek(pageEntry.getOffset());
+			for (int i = 0; i < numOfRecords; i++) {
+				record = fileReader.readLine();
+				page.getRecords().add(getTuple(record, types));
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return page;
 	}
 }

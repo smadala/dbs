@@ -9,4 +9,7 @@ public class MergeRecord {
 		this.record=record;
 		this.subTableIndex=subTableIndex;
 	}
+	public String toString(){
+		return subTableIndex+record.toString();
+	}
 }

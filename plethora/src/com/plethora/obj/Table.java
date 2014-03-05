@@ -70,4 +70,7 @@ public class Table {
 		int avgRecordSize = numOfPages * DataBaseMemoryConfig.PAGE_SIZE/ pageEntries.get(numOfPages-1).getEndRecordId();
 		return DataBaseMemoryConfig.NUM_OF_PAGES * DataBaseMemoryConfig.PAGE_SIZE / avgRecordSize ;
 	}
+	public String toString(){
+		return tableName;
+	}
 }

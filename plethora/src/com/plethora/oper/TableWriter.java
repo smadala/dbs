@@ -27,7 +27,7 @@ public class TableWriter {
 	public void open(){
 		OStream=FileReader.getTableOutputStream(table.getTableName(),false);
 		lastPage=new Page();
-		lastPageEntry=createPageEntry(0, 0, 0);
+		lastPageEntry=createPageEntry(0, -1, 0);
 //		System.out.println("In Open "+lastPageEntry.getLeftOver());
 	//	System.out.println("PageSize "+DataBaseMemoryConfig.PAGE_SIZE);
 		pageNumbers=pageNumbers+1;
@@ -40,27 +40,25 @@ public class TableWriter {
 		int lastRecordId = lastPageEntry.getEndRecordId();
 		long offset = lastPageEntry.getOffset()
 				+ (DataBaseMemoryConfig.PAGE_SIZE - lastPageEntry.getLeftOver());
-        String test=stringBuilder.toString()+FileReader.toString(record)+'\n';
-		if (lastPageEntry.canAddRecord(test)) { // space available in lastPage
-			stringBuilder.append(FileReader.toString(record)).append("\n");	
+		
+        String line=FileReader.toString(record);
+        
+		if (lastPageEntry.canAddRecord(line)) { // space available in lastPage
+			stringBuilder.append(line).append('\n');	
 			lastPage.getRecords().add(record);
 			lastPageEntry.setEndRecordId(++lastRecordId);
 		} else { // create new Page
-			table.getPageEntries().add(lastPageEntry);
+			
 			//add the lastpage to repository , cachedPages may be.!
-			stringBuilder.deleteCharAt(stringBuilder.length()-1);
-			FileReader.writeLine(OStream, stringBuilder.toString());
+			FileReader.writeLine(OStream, stringBuilder.substring(0, stringBuilder.length()-1));
 			
 			stringBuilder=new StringBuilder();
-			stringBuilder.append(FileReader.toString(record)).append("\n");
+			stringBuilder.append(line).append('\n');
 			
 			lastPageEntry=createPageEntry(++lastRecordId, lastRecordId, offset);
 			pageNumbers=pageNumbers+1;
-			
-			if (lastPageEntry.canAddRecord(stringBuilder.toString()))
-				; // Assume record size is less than PAGE_SIZE
-			
 			table.getPageEntries().add(lastPageEntry);
+			if (lastPageEntry.canAddRecord(line))				; // Assume record size is less than PAGE_SIZE
 			
 			lastPage = new Page();
 			lastPage.getRecords().add(record);
@@ -79,6 +77,12 @@ public class TableWriter {
 	
 	public void close(){
 		try{
+			
+			//add the lastpage to repository , cachedPages may be.!
+			if(stringBuilder.length() != 0){
+				FileReader.writeLine(OStream, stringBuilder.substring(0, stringBuilder.length()-1));
+			}
+			
 			OStream.close();
 		}
 		catch(Exception e){

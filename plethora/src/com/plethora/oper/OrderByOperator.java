@@ -53,6 +53,7 @@ public class OrderByOperator {
 		for(List<Object> record:records){
 			tableWriter.write(record);
 		}
+		tableWriter.close();
 	}
 	
 	public void merge(){
@@ -73,23 +74,20 @@ public class OrderByOperator {
 		MergeRecord mergeRecord;
 		List<Object> record;
 		PriorityQueue<MergeRecord> pq=new PriorityQueue<>(size, new MergeLineOrderBySort(orderBies));
-		
-		
-		
+		for(int i=0;i<size;i++){
+			record=tableIterators.get(i).getNext();
+			if(record != null){
+			pq.add( new MergeRecord( record, i));
+			}
+		}
 		while(!pq.isEmpty()){
+			
 			mergeRecord=pq.poll();
 			tableWriter.write(mergeRecord.record);
 			record=tableIterators.get(mergeRecord.subTableIndex).getNext();
 			if(record != null){
 			pq.add( new MergeRecord( record, mergeRecord.subTableIndex));
-			}/*else{
-				for(int i=0;i<size;i++){
-					record=tableIterators.get(i).getNext();
-					if(record != null){
-					pq.add( new MergeRecord( record, i));
-					}
-				}
-			}*/
+			}
 		}
 		tableWriter.close();
 		return resultTable;
@@ -142,7 +140,7 @@ public class OrderByOperator {
 		private int compare(List<Object> o1, List<Object> o2, OrderBy orderBy){
 			int diff;
 			Object o1i=o1.get(orderBy.attributePos);
-			Object o2i=o1.get(orderBy.attributePos);
+			Object o2i=o2.get(orderBy.attributePos);
 			diff=ComparisonOperator.comapre(o1i, o2i);
 			if(orderBy.desc)
 				diff=diff*-1; //make reverse

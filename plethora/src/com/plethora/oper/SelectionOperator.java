@@ -1,9 +1,7 @@
 package com.plethora.oper;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 import com.plethora.obj.ComparisonOperator;
 import com.plethora.obj.Condition;

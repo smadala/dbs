@@ -1,11 +1,10 @@
 package com.plethora.oper;
 
-import java.io.InputStream;
+import java.io.RandomAccessFile;
+
 import static com.plethora.mem.DataBaseMemoryConfig.cachedPages;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.plethora.obj.FieldType;
@@ -18,54 +17,43 @@ public class TableIterator {
 	private Table table;
 	public TableIterator(Table table){
 		this.table=table;
+		tableName=table.getTableName();
+		fileReader = FileReader.getRandomAccessFile(tableName,"r");
 		open();
 	}
-	InputStream iStream;
-	Iterator<PageEntry> pageEntries;
+	RandomAccessFile fileReader; 
+	private Iterator<PageEntry> pageEntriesIt;
 	List<FieldType> fieldList;
-	PageEntry pageEntry;
+	private PageEntry pageEntry;
 	Page page;
 	List<Object> currentTuple;
 	Iterator<List<Object>> tupleIterator;
 	Set<FieldType> fields; 
-	
+	String tableName;
 	boolean readBlock( ){
 		String cacheKey=null;
-		if(pageEntries.hasNext()){
-			pageEntry=pageEntries.next();
+		if(pageEntriesIt.hasNext()){
+			
+			pageEntry=pageEntriesIt.next();
 			cacheKey=FileReader.getCacheKey(table.getTableName(), pageEntry.getPageNumber());
 			page=cachedPages.get(cacheKey, true);
 			if( page != null)
 				return true;
-			List<List<Object>> tuples=new ArrayList<List<Object>>();
-			String line;
-			int start=0,end=0;
-			start=pageEntry.getStartRecordId();
-			end=pageEntry.getEndRecordId();
-			while((line=FileReader.readLine(iStream))!=null && start<=end){
-				List<Object> attr=FileReader.getTuple(line, fieldList);
-				start=start+1;
-				tuples.add(attr);
-			}
-			page=new Page();
-			page.setRecords(tuples);
+			page=FileReader.loadPage(cacheKey, pageEntry, fieldList, fileReader);
 			cachedPages.put(cacheKey, page);
 			return true;
 		}
-		else
+		else{
 			return false;
+		}
 	}
 	
 	public void open(){
 		try{
-			iStream = FileReader.getTableInputStream(table.getTableName());
-			pageEntries=table.getPageEntries().iterator();
+			pageEntriesIt=table.getPageEntries().iterator();
 			fieldList=table.getFieldList();
 			if(readBlock()){
 				tupleIterator=page.getRecords().iterator();
-				/*if(tupleIterator.hasNext()){
-					currentTuple=tupleIterator.next();
-				}*/
 			}
 		}
 		catch(Exception e){
@@ -78,22 +66,19 @@ public class TableIterator {
 		if(!tupleIterator.hasNext()){
 			if(readBlock()){
 				tupleIterator=page.getRecords().iterator();
-				if(tupleIterator.hasNext())
+				if(tupleIterator.hasNext()){
 					return tupleIterator.next();
+				}
 				return null;
 			}
 			return null;
 		}
-		/*oldTuple=currentTuple;
-		if(tupleIterator.hasNext()){
-			currentTuple=tupleIterator.next();
-		}*/
 		return tupleIterator.next();
 	}
 	
 	public void close(){
 		try{
-			iStream.close();
+			fileReader.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();

@@ -84,4 +84,13 @@ public class PageEntry {
 		}
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		return "PageEntry [pageNumber=" + pageNumber + ", startRecordId="
+				+ startRecordId + ", endRecordId=" + endRecordId
+				+ ", leftOver=" + leftOver + ", offset=" + offset + "]";
+	}
+	
+	
 }

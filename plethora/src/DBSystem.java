@@ -574,12 +574,15 @@ public class DBSystem {
 					continue;
 
 				records.add(record);
-				/*if (records.size() > maxNumOfRecords) {
+				if (records.size() > maxNumOfRecords) {
 					orderByOperator.createSortFile(records);
 					records = new ArrayList<>();
-				}*/
+				}
 			}
 			if (orderByOperator.isMultiPhaseSort()) {
+				if(!records.isEmpty()){
+					orderByOperator.createSortFile(records);
+				}
 				orderByOperator.merge();
                 TableIterator sortedTableIt=new TableIterator(orderByOperator.getResultTable());
                 List<Object> tuple=null;
