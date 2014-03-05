@@ -1,14 +1,15 @@
-PAGESIZE 8
+PAGE_SIZE 100
 NUM_PAGES 4
-PATH_FOR_DATA /home/satya/workspace/dbs/plethora
+PATH_FOR_DATA /var/tmp
 BEGIN
-employee
-employee_id,int
-employee_name,string
+Ac
+Id,Int
+nAmE,vArchAr(10)
+sAlAry,flOAt
 END
 BEGIN
-student
-sid,int
-sname,string
-sbatch,string
+BC
+iD,iNT
+NaMe,VaRCHaR(10)
+SaLaRY,FLoaT
 END
