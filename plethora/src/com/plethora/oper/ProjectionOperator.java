@@ -22,13 +22,15 @@ public class ProjectionOperator {
 		}
 		return resultRecords;
 	}*/
-	public List<Object> project(List<Object> records,List<Expression> exprs){
-		List<Object> resultRecord=new ArrayList<>();
+	public List<Object> project(List<Object> record,List<Expression> exprs){
 		
-			for(Expression expr:exprs){
-				//expr eval should happen here... current assumed only one column
-				resultRecord.add(records.get(expr.columnPos));
-			}
+		if(exprs.size() == 0)
+			return record;
+		List<Object> resultRecord=new ArrayList<>();
+		for(Expression expr:exprs){
+			//expr eval should happen here... current assumed only one column
+			resultRecord.add(record.get(expr.columnPos));
+		}
 		return resultRecord;
 	}
 /*	public static void main(String args[]){

@@ -1,6 +1,7 @@
 package com.plethora.obj;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -57,5 +58,19 @@ public enum DataType{
 		}
 		else
 			return null;
+	}
+	public static ComparisonOperator getComparisonOperator(String oper){
+		return comMap.get(oper);
+	}
+	public static Map<String,ComparisonOperator> comMap;
+	static {
+		comMap=new HashMap<String, ComparisonOperator>();
+		comMap.put("=", ComparisonOperator.EQUAL);
+		comMap.put(">=", ComparisonOperator.GREATER_AND_EQUAL);
+		comMap.put("<=", ComparisonOperator.LESSTHAN_AND_EQUAL);
+		comMap.put("!=", ComparisonOperator.NOT_EQUAL);
+		comMap.put(">", ComparisonOperator.GREATERTHAN);
+		comMap.put("<", ComparisonOperator.LESSTHAN);
+		comMap.put("like", ComparisonOperator.LIKE);
 	}
 }

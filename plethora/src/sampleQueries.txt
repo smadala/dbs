@@ -1,1 +1,1 @@
-select * from ac where id = 10 or name = "satya" and salary = "110"
+select * from ac where id = 10 and name <= "satya" or salary like "110.00"

@@ -3,7 +3,7 @@ package com.plethora.obj;
 public class Condition {
 
 	public ComparisonOperator operator;
-	public int AttributePos;
+	public int attributePos;
 	public Object val;
     
 }

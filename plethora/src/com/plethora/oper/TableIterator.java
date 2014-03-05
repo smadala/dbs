@@ -20,7 +20,7 @@ public class TableIterator {
 	}
 	InputStream iStream;
 	Iterator<PageEntry> pageEntries;
-	Iterator<FieldType> fieldsIt;
+	List<FieldType> fieldList;
 	PageEntry pageEntry;
 	Page page;
 	List<Object> currentTuple;
@@ -36,7 +36,7 @@ public class TableIterator {
 			start=pageEntry.getStartRecordId();
 			end=pageEntry.getEndRecordId();
 			while((line=FileReader.readLine(iStream))!=null && start<=end){
-				List<Object> attr=FileReader.getTuple(line, fieldsIt);
+				List<Object> attr=FileReader.getTuple(line, fieldList);
 				start=start+1;
 				tuples.add(attr);
 			}
@@ -52,7 +52,7 @@ public class TableIterator {
 		try{
 			iStream = FileReader.getTableInputStream(table.getTableName());
 			pageEntries=table.getPageEntries().iterator();
-			fieldsIt=table.getFields().values().iterator();
+			fieldList=table.getFieldList();
 			if(readBlock()){
 				tupleIterator=page.getRecords().iterator();
 				/*if(tupleIterator.hasNext()){

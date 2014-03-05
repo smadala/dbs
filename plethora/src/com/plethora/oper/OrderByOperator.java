@@ -1,6 +1,5 @@
 package com.plethora.oper;
 
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,28 +21,34 @@ public class OrderByOperator {
 	List<OrderBy> orderBies;
 	Table resultTable;
 	
-	public void sort(List<List<Object>> records, List<OrderBy> ordeBies){
-		Comparator<List<Object>> comparator=new OrderBySort(ordeBies);
+	public void sort(List<List<Object>> records, List<OrderBy> orderBies){
+		if(orderBies.size() == 0)
+			return;
+		Comparator<List<Object>> comparator=new OrderBySort(orderBies);
 		Collections.sort(records, comparator);
 	}
-	public String getFileName(){
+	public String getTemporaryTableName(){
 		StringBuilder fileName=new StringBuilder();
 		fileName.append(table.getTableName()).append('_').append(sublistId++);
 		return fileName.toString();
 	}
 	public void createSortFile(List<Page> pages){
 		
-		String fileName=getFileName();
-		//subListFileNames.add(FileReader.getTableDataFile(fileName).getAbsolutePath());
-		OutputStream oStream = FileReader.getTableOutputStream(fileName);
+		String tableName=getTemporaryTableName();
 		List<List<Object>> records=new ArrayList<>();
 		for(Page page:pages){
 			records.addAll(page.getRecords());
 		}
 		sort(records,orderBies);
-		Table auxTable=FileReader.createTable(table, records);
+		Table auxTable=FileReader.cloneTable(table, tableName);
 		subTables.add(auxTable);
-		//FileReader.writePage(records, oStream);
+		writeRecords(auxTable, records);
+	}
+	public void writeRecords(Table table,List<List<Object>> records){
+		TableWriter tableWriter=new TableWriter(table);
+		for(List<Object> record:records){
+			tableWriter.write(record);
+		}
 	}
 	
 	public void merge(){

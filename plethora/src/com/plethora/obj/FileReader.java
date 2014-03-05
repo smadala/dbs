@@ -168,24 +168,33 @@ public class FileReader {
 		}
 	}
 	
+
+	public static Table cloneTable(Table table, String tableName){
+		Table clTable= new Table(tableName);
+		clTable.setFields(table.getFields());
+		return clTable;
+	}
 	
-	public static List<Object> getTuple(String record,Iterator<FieldType> it){
+	public static List<Object> getTuple(String record,List<FieldType> types){
 		
 		List<Object> tuple=new ArrayList<>();
 		String []tokens=record.split(",");
 		FieldType field=null;
-		int i=0;Object val=null; String token;
+		Object val=null; String token;
 		
-		while( it.hasNext()){
-			token = tokens[i++];
-			field=it.next();
+		for(int i=0;i<types.size();i++){
+			token = tokens[i];
+			field=types.get(i);
 			switch(field.getType()){
 			case INTEGER:
 				val=Integer.parseInt(token);
+				break;
 			case VARCHAR:
-				val=Float.parseFloat(token);
-			case FLOAT:
 				val=token;
+				break;
+			case FLOAT:
+				val=Float.parseFloat(token);
+				break;
 			}
 			tuple.add(val);
 		}

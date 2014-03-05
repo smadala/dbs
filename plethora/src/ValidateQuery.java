@@ -19,6 +19,7 @@ import com.plethora.obj.Condition;
 import com.plethora.obj.DataType;
 import com.plethora.obj.Expression;
 import com.plethora.obj.FieldType;
+import com.plethora.obj.LogicalOperator;
 import com.plethora.obj.OrderBy;
 import com.plethora.obj.Select;
 import com.plethora.obj.SelectQuery;
@@ -29,9 +30,6 @@ import com.plethore.excp.InvalidQuery;
 
 public class ValidateQuery {
 	
-	private String tableName;
-	private List<OrderBy> orderBies;
-	private List<Condition> conditions;
 	private Map<String,Table> tableMetaData;
 	private Map<String,String> allColumnNames;
 	private Map<String,Set<String>> tableFieldNames;
@@ -39,18 +37,11 @@ public class ValidateQuery {
 	
 	private SelectQuery query;
 	private Select select;
-	public static Map<ComparisonOperator,EExpressionType> compMap;
 	
-	static{
-	compMap=new HashMap<>();
-	compMap.put(ComparisonOperator.EQUAL, EExpressionType.simple_comparison_t);
-	}
 	
 	public ValidateQuery(Map<String,Table> tableMetaData,SelectQuery query){
 		this.tableMetaData=tableMetaData;
 		this.query=query;
-		orderBies=new ArrayList<>();
-		conditions=new ArrayList<>();
 		Iterator<Map.Entry<String,TTable>> it=query.getTables().entrySet().iterator();
 		String tableNamelocal;
 		allColumnNames=new LinkedHashMap<String,String>(3);
@@ -58,8 +49,6 @@ public class ValidateQuery {
 		tableAttributes=new HashMap<String,Map<String,FieldType>>(3);
 		Map<String,FieldType> fields;
 		Set<String> fieldNames;
-		String columnName;
-		int begin,end;
 		
 		while(it.hasNext()){
 			Map.Entry<String, TTable> en=it.next();
@@ -116,16 +105,33 @@ public class ValidateQuery {
 			if(!validateCondition(query.getCondition().getCondition(),where))
 				throw new InvalidQuery("Invalid type in condition");
 		}
-		
+		select.where=where;
+		List<OrderBy> orderBies=new ArrayList<>();
 		//validate OrderBy
 		if(query.getOrderby() != null){
 			TOrderByItemList orderList=query.getOrderby().getItems();
-			String sortColumn;
+			OrderBy orderBy=null;
+			String sortColumn, order;
+			int pos;
 			for(int i=0;i<orderList.size();i++){
-				sortColumn=orderList.getElement(i).getStartToken().toString();
+				
+				sortColumn = orderList.getElement(i).getStartToken().toString().toLowerCase();
+				order = orderList.getElement(i).getEndToken().toString().toLowerCase();
 				validateColumn(sortColumn);
+				orderBy=new OrderBy();
+				pos=select.table.getColumnPos(sortColumn);
+				if(sortColumn.equals(order)){
+					orderBy.attributePos=pos;
+				}else{
+					if(order.equals("desc")){
+						orderBy.desc=true;
+					}
+					orderBy.attributePos=pos;
+				}
+				orderBies.add(orderBy);
 			}
 		}
+		select.orderBies=orderBies;
 		//validate GroupBy
 		if(query.getGroupby()!= null){
 			TGroupByItemList groupbyList=query.getGroupby().getItems();
@@ -147,34 +153,51 @@ public class ValidateQuery {
 //		SELECT Subject, Semester, Count(*) FROM student GROUP BY Subject, Semester
 		return true;
 	}
-	private boolean validateCondition(TExpression condition ,WhereClause where) throws InvalidQuery{
-		if( !is_compare_condition( condition.getExpressionType( ) ))
-			return validateCondition(condition.getLeftOperand(),where) && 
-					validateCondition(condition.getRightOperand(),where);
-		
-		    Class leftClass=getType(condition.getLeftOperand());
-		    Class rightClass=getType(condition.getRightOperand());
+	private boolean validateCondition(TExpression tCondition ,WhereClause where) throws InvalidQuery{
+		if( !is_compare_condition( tCondition.getExpressionType( ) )){
+			
+			LogicalOperator logicalOperator=LogicalOperator.OR;
+			if( tCondition.getExpressionType() == EExpressionType.logical_and_t)
+				logicalOperator=LogicalOperator.AND;
+			where.logicalOperators.add(logicalOperator);
+			
+			return validateCondition(tCondition.getLeftOperand(),where) && 
+					validateCondition(tCondition.getRightOperand(),where);
+		}
+		    Class leftClass=getType(tCondition.getLeftOperand());
+		    Class rightClass=getType(tCondition.getRightOperand());
 		    
-		    if(leftClass == null || rightClass == null)
-		    	return false;
-		    System.out.println(condition.toString());
-		    if(leftClass.equals(rightClass))
-		    	return true;
-		throw new InvalidQuery("invalid condition " +condition.toString());
+		    if(leftClass == null || rightClass == null || !leftClass.equals(rightClass)){
+		    	throw new InvalidQuery("invalid condition " +tCondition.toString());
+		    }
+		    where.conditions.add(getCondition(tCondition));
+		 return true;  
 	}
 	
 	
-	private Condition getCondition(TExpression condition){
-		TExpression lCond=condition.getLeftOperand(), rCond=condition.getRightOperand(); 
+	private Condition getCondition(TExpression tCondition){
+		TExpression lCond=tCondition.getLeftOperand(), rCond=tCondition.getRightOperand(); 
 		String lopar=lCond.toString().toLowerCase();
 		String ropar=rCond.toString().toLowerCase();
-		if( select.table.getColumnPos(lopar) != null ){
-			
-		}else if(select.table.getColumnPos(ropar) != null ){
-			
-		}
-		return null;
+		Condition condition=new Condition();
+		Integer pos=select.table.getColumnPos(lopar);
+		condition.attributePos=pos;
+		condition.val=getValue(ropar, select.table.getFields().get(lopar));
+		if(tCondition.getExpressionType() == EExpressionType.simple_comparison_t)
+			condition.operator=DataType.getComparisonOperator(tCondition.getComparisonOperator().astext);
+		else
+			condition.operator=ComparisonOperator.LIKE;
+		return condition;
 	}
+	private Object getValue(String val,FieldType fieldType){
+		DataType type =fieldType.getType();
+		if( type == DataType.INTEGER)
+			return Integer.parseInt(val);
+		else if( type == DataType.VARCHAR)
+			return val;
+		return Float.parseFloat(val);
+	}
+	
 	private boolean is_compare_condition( EExpressionType t )
 	{
 		//System.out.println(t);
@@ -188,11 +211,11 @@ public class ValidateQuery {
 		String rawVal=oper.toString();
 		Map<DataType,Class> typeClasses=getTypeMap();
 		try{
-			double val=Double.parseDouble(rawVal);
+			float val=Float.parseFloat(rawVal);
 			if(val == (int) val){
 				return Integer.class;
 			}else{
-				return Double.class;
+				return Integer.class;
 			}
 		}catch(NumberFormatException e){
 			if((rawVal.charAt(0) == '\"' && rawVal.charAt(rawVal.length()-1) == '\"' ) ||
@@ -254,7 +277,7 @@ public class ValidateQuery {
 	private Map<DataType,Class> getTypeMap(){
 		Map<DataType,Class> types=new HashMap<DataType,Class>();
 		types.put(DataType.INTEGER, Integer.class);
-		types.put(DataType.FLOAT, Float.class);
+		types.put(DataType.FLOAT, Integer.class);
 		types.put(DataType.VARCHAR, String.class);
 		return types;
 	}
@@ -279,6 +302,13 @@ public class ValidateQuery {
 		}
 		return true;
 	}
+	public Select getSelect() {
+		return select;
+	}
+	public void setSelect(Select select) {
+		this.select = select;
+	}
+	
 	/*public static String stripParanthesis(String input){
 		int begin=0,parnCount=1;
 		while(input.charAt(begin) == ' ') begin++;

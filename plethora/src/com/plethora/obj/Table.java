@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Table {
 	
@@ -49,5 +51,15 @@ public class Table {
 	
 	public Integer getColumnPos(String column){
 		return fieldPos.get(column);
+	}
+	
+	public List<FieldType> getFieldList(){
+		
+		List<FieldType> fieldList=new ArrayList<>();
+		Iterator<Map.Entry<String, FieldType>> it = fields.entrySet().iterator();
+		while(it.hasNext()){
+			fieldList.add(it.next().getValue());
+		}
+		return fieldList;
 	}
 }

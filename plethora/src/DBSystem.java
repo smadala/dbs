@@ -1,19 +1,28 @@
-import gudusoft.gsqlparser.nodes.*;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.TGSqlParser;
-import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
+import gudusoft.gsqlparser.nodes.TColumnDefinition;
 import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
+import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.swing.table.TableStringConverter;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
@@ -24,8 +33,13 @@ import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
 import com.plethora.obj.PageEntry;
 import com.plethora.obj.Query.QueryType;
+import com.plethora.obj.Select;
 import com.plethora.obj.SelectQuery;
 import com.plethora.obj.Table;
+import com.plethora.oper.OrderByOperator;
+import com.plethora.oper.ProjectionOperator;
+import com.plethora.oper.SelectionOperator;
+import com.plethora.oper.TableIterator;
 import com.plethore.excp.InvalidQuery;
 
 public class DBSystem {
@@ -119,7 +133,7 @@ public class DBSystem {
 		try {
 			for (String tableName : tableNames) {
 
-				table = new Table(tableName);
+				table = tableMetaData.get(tableName.toLowerCase());
 				//tableMetaData.put(tableName, table);
 				recordId = 0;
 				br = FileReader.getTableInputStream(tableName);
@@ -160,6 +174,8 @@ public class DBSystem {
 				}
 				pageEntry.setEndRecordId(recordId - 1);
 				table.getPageEntries().add(pageEntry);
+				if(br != null)
+					br.close();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -348,6 +364,7 @@ public class DBSystem {
 		DBSystem obj=new DBSystem();
 		String query;
 		obj.readConfig(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
+		obj.populateDBInfo();
 		try{
 			InputStream br=new FileInputStream(args[1]);
 			while((query=FileReader.readLine(br))!=null && !query.trim().isEmpty()){
@@ -505,10 +522,45 @@ public class DBSystem {
 					System.out.println("Query Invalid");
 					return;
 				}
-				System.out.println(q);
+				//System.out.println(q);
+				executeSelect(validateQuery.getSelect());
 			}
 		}else{
 			System.out.println("Query Invalid");
+		}
+	}
+	
+	public void executeSelect(Select select){
+		List<Object> record;
+		TableIterator tableIt=new TableIterator(select.table);
+		tableIt.open();
+		SelectionOperator selectionOperator=new SelectionOperator();
+		ProjectionOperator projectionOperator=new ProjectionOperator();
+		if(select.orderBies.size() == 0){
+			
+			 while((record=tableIt.getNext())!=null) {
+				 record=selectionOperator.select(record, select.where.conditions, select.where.logicalOperators);
+				 if(record == null)
+					 continue;
+				 
+				 projectionOperator.project(record, select.projCols);
+				 System.out.println(record);
+			 }
+		}else{
+			OrderByOperator orderByOperator=new OrderByOperator();
+			List<List<Object>> records=new ArrayList<>();
+			while((record=tableIt.getNext())!=null) {
+				 record=selectionOperator.select(record, select.where.conditions, select.where.logicalOperators);
+				 if(record == null)
+					 continue;
+				 
+				records.add(record);
+			 }
+			 orderByOperator.sort(records, select.orderBies);
+			 for(List<Object> r:records){
+				 projectionOperator.project(record, select.projCols);
+			 	 System.out.println(record);
+			 } 
 		}
 	}
 }

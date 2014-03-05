@@ -35,7 +35,7 @@ public class SelectionOperator {
 		Object attribute;
 		while(conditionIterator.hasNext()){
 			 condition=conditionIterator.next();
-			 position=condition.AttributePos;
+			 position=condition.attributePos;
 			 attribute=record.get(position);
 			logicalOutput[track]=ComparisonOperator.eval(condition.operator, attribute, condition.val);
 			 track=track+1;
