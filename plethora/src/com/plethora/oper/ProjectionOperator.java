@@ -24,7 +24,7 @@ public class ProjectionOperator {
 	}*/
 	public List<Object> project(List<Object> record,List<Expression> exprs){
 		
-		if(exprs.size() == 0)
+		if(exprs.isEmpty())
 			return record;
 		List<Object> resultRecord=new ArrayList<>();
 		for(Expression expr:exprs){

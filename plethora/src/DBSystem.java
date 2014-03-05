@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
 import static com.plethora.mem.DataBaseMemoryConfig.cachedPages;
@@ -44,28 +43,25 @@ import com.plethore.excp.InvalidQuery;
 
 public class DBSystem {
 	public List<String> tableNames = new ArrayList<String>();
-	
 
 	public static Map<String, Table> tableMetaData = new HashMap<String, Table>();
-  
-	 // tableName_pageNumber
-	
-	
+
+	// tableName_pageNumber
+
 	TGSqlParser sqlParser = new TGSqlParser(EDbVendor.dbvmysql);
-	
-	
 
 	public void readConfig(String configFilePath) {
 		InputStream br = null;
 		try {
-			String line = null, tokens[] = null,tableb;
+			String line = null, tokens[] = null, tableb;
 			br = new FileInputStream(configFilePath);
 			while ((line = FileReader.readLine(br)) != null) {
-				if ((!(line.equals(ConfigConstants.TABLE_BEGIN))) && (!(line.equals(ConfigConstants.TABLE_END)))){
+				if ((!(line.equals(ConfigConstants.TABLE_BEGIN)))
+						&& (!(line.equals(ConfigConstants.TABLE_END)))) {
 					tokens = line.split(ConfigConstants.PROPS_DELIMITER);
 					// memoryProps.put(tokens[0],tokens[1]);
 					if (tokens[0].equals(ConfigConstants.PAGESIZE)) {
-					//	System.out.println("In Main method "+Integer.parseInt(tokens[1]));
+						// System.out.println("In Main method "+Integer.parseInt(tokens[1]));
 						DataBaseMemoryConfig.PAGE_SIZE = Integer
 								.parseInt(tokens[1]);
 					} else if (tokens[0].equals(ConfigConstants.NUM_PAGES)) {
@@ -78,23 +74,23 @@ public class DBSystem {
 								tokens[1]);
 					}
 				} else if (line.equals(ConfigConstants.TABLE_BEGIN)) {
-					line=FileReader.readLine(br);
-					tableb=line;
+					line = FileReader.readLine(br);
+					tableb = line;
 					tableNames.add(line);
-					Table temp=new Table(line);
-					line=FileReader.readLine(br);
-					Map<String,FieldType> fields=new HashMap<String,FieldType>();
-					while(!(line.equals(ConfigConstants.TABLE_END))){
-						tokens=line.split(",");
-						if(!(tokens[0].equals(ConfigConstants.PRIMARY_KEY))){
-							FieldType fd=new FieldType();
+					Table temp = new Table(line);
+					line = FileReader.readLine(br);
+					Map<String, FieldType> fields = new HashMap<String, FieldType>();
+					while (!(line.equals(ConfigConstants.TABLE_END))) {
+						tokens = line.split(",");
+						if (!(tokens[0].equals(ConfigConstants.PRIMARY_KEY))) {
+							FieldType fd = new FieldType();
 							fd.setName(tokens[0]);
 							fd.setType(DataType.isValidDataType(tokens[1]));
 							fields.put(tokens[0].toLowerCase(), fd);
-							line=FileReader.readLine(br);
-						}
-						else{
-							FieldType tempFd=fields.get(tokens[1].toLowerCase());
+							line = FileReader.readLine(br);
+						} else {
+							FieldType tempFd = fields.get(tokens[1]
+									.toLowerCase());
 							tempFd.setIsPrimaryKey(true);
 							fields.put(tokens[1].toLowerCase(), tempFd);
 						}
@@ -135,7 +131,7 @@ public class DBSystem {
 			for (String tableName : tableNames) {
 
 				table = tableMetaData.get(tableName.toLowerCase());
-				//tableMetaData.put(tableName, table);
+				// tableMetaData.put(tableName, table);
 				recordId = 0;
 				br = FileReader.getTableInputStream(tableName);
 				offset = 0;
@@ -175,7 +171,7 @@ public class DBSystem {
 				}
 				pageEntry.setEndRecordId(recordId - 1);
 				table.getPageEntries().add(pageEntry);
-				if(br != null)
+				if (br != null)
 					br.close();
 			}
 		} catch (Exception e) {
@@ -189,7 +185,8 @@ public class DBSystem {
 
 		PageEntry pageEntry = getPageEntry(tableName, recordId);
 
-		String pageKey = FileReader.getCacheKey(tableName, pageEntry.getPageNumber());
+		String pageKey = FileReader.getCacheKey(tableName,
+				pageEntry.getPageNumber());
 
 		Page page = cachedPages.get(pageKey, true);
 		if (page == null) {
@@ -201,7 +198,8 @@ public class DBSystem {
 		} else {
 			System.out.println("HIT");
 		}
-		return page.getRecords().get(recordId - pageEntry.getStartRecordId()).toString();
+		return page.getRecords().get(recordId - pageEntry.getStartRecordId())
+				.toString();
 	}
 
 	private Page loadPage(String tableName, PageEntry pageEntry) {
@@ -213,9 +211,9 @@ public class DBSystem {
 		try {
 			fileReader.seek(pageEntry.getOffset());
 			for (int i = 0; i < numOfRecords; i++) {
-				List<Object> record=new ArrayList<>();
+				List<Object> record = new ArrayList<>();
 				record.add(fileReader.readLine());
-				page.getRecords().add( record);
+				page.getRecords().add(record);
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -281,7 +279,7 @@ public class DBSystem {
 				page = loadPage(tableName, lastEntry);
 				cachedPages.put(pageKey, page);
 			}
-			List<Object> r=new ArrayList<>();
+			List<Object> r = new ArrayList<>();
 			r.add(record);
 			page.getRecords().add(r);
 			lastEntry.setEndRecordId(++lastRecordId);
@@ -296,7 +294,7 @@ public class DBSystem {
 			newEntry.setPageNumber(++lastPageNum);
 			newEntry.setOffset(offset);
 			page = new Page();
-			List<Object> r=new ArrayList<>();
+			List<Object> r = new ArrayList<>();
 			r.add(record);
 			page.getRecords().add(r);
 			pageKey = FileReader.getCacheKey(tableName, lastPageNum);
@@ -356,221 +354,258 @@ public class DBSystem {
 	 * ob1.insertRecord("employee", "66666"); for(int i=0;i<6;i++){
 	 * System.out.println(ob1.getRecord("employee", i)); } }
 	 */
-	
-	public static void main(String args[]){
-		DataBaseMemoryConfig.PATH_FOR_CONF_FILE=args[0];
-		DBSystem obj=new DBSystem();
+
+	public static void main(String args[]) {
+		DataBaseMemoryConfig.PATH_FOR_CONF_FILE = args[0];
+		DBSystem obj = new DBSystem();
 		String query;
 		obj.readConfig(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
 		obj.populateDBInfo();
-		try{
-			InputStream br=new FileInputStream(args[1]);
-			while((query=FileReader.readLine(br))!=null && !query.trim().isEmpty()){
+		try {
+			InputStream br = new FileInputStream(args[1]);
+			while ((query = FileReader.readLine(br)) != null
+					&& !query.trim().isEmpty()) {
 				obj.queryType(query);
 				System.out.println();
 			}
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	public void queryType(String query) {
-		String tokens[]=query.split("\\s+");
-		switch(QueryType.getQueryType(tokens[0])){
-		case CREATE: createCommand(query); break;
-		case SELECT: selectCommand(query);break;
-		default: System.out.println("Query Invalid");
+		String tokens[] = query.split("\\s+");
+		switch (QueryType.getQueryType(tokens[0])) {
+		case CREATE:
+			createCommand(query);
+			break;
+		case SELECT:
+			selectCommand(query);
+			break;
+		default:
+			System.out.println("Query Invalid");
 		}
 
 	}
-	
-	
-	public void createCommand(String query){
-		File conFile=new File(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
-		try{
-			/*if(!(conFile.exists())){
-				conFile.createNewFile();
-				FileWriter fw=new FileWriter(conFile);
-				BufferedWriter bw=new BufferedWriter(fw);
-				bw.write("PAGESIZE 8\n");
-				bw.write("NUM_PAGES 4\n");
-				bw.write("PATH_FOR_DATA /var/tmp\n");
-				bw.close();
-			}*/
-			sqlParser.sqltext=query;
-			int ret=sqlParser.parse();
-			if(ret==0){
-				for(int i=0;i<sqlParser.sqlstatements.size();i++){
-					analyzeCreateTableStmt((TCreateTableSqlStatement)sqlParser.sqlstatements.get(i));
-	                System.out.println("");
-	            }
-			}
-			else{
+
+	public void createCommand(String query) {
+		File conFile = new File(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
+		try {
+			/*
+			 * if(!(conFile.exists())){ conFile.createNewFile(); FileWriter
+			 * fw=new FileWriter(conFile); BufferedWriter bw=new
+			 * BufferedWriter(fw); bw.write("PAGESIZE 8\n");
+			 * bw.write("NUM_PAGES 4\n"); bw.write("PATH_FOR_DATA /var/tmp\n");
+			 * bw.close(); }
+			 */
+			sqlParser.sqltext = query;
+			int ret = sqlParser.parse();
+			if (ret == 0) {
+				for (int i = 0; i < sqlParser.sqlstatements.size(); i++) {
+					analyzeCreateTableStmt((TCreateTableSqlStatement) sqlParser.sqlstatements
+							.get(i));
+					System.out.println("");
+				}
+			} else {
 				System.out.println("Query Invalid");
 			}
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	private void analyzeCreateTableStmt(TCreateTableSqlStatement pStmt){
-		String tableName=pStmt.getTargetTable().toString();
-		String tokens[]=null,toks[]=null;
-		String printIt=null,dataIt="",configIt=null,checkType;
-		Table temp=new Table(tableName);
-		Map<String,FieldType> fields=new HashMap<String,FieldType>();
-		boolean valid=true;
-		Set<String> set=new HashSet<String>();
-		int pKey=0;
-		if(tableMetaData.containsKey(tableName.toLowerCase())){
+
+	private void analyzeCreateTableStmt(TCreateTableSqlStatement pStmt) {
+		String tableName = pStmt.getTargetTable().toString();
+		String tokens[] = null, toks[] = null;
+		String printIt = null, dataIt = "", configIt = null, checkType;
+		Table temp = new Table(tableName);
+		Map<String, FieldType> fields = new HashMap<String, FieldType>();
+		boolean valid = true;
+		Set<String> set = new HashSet<String>();
+		int pKey = 0;
+		if (tableMetaData.containsKey(tableName.toLowerCase())) {
 			System.out.println("Query Invalid");
-		}
-		else{
-			try{
-				printIt="Querytype:create\n";
-				printIt=printIt+"Tablename:"+tableName+"\n";
-				configIt="\nBEGIN\n";
-				configIt=configIt+tableName+"\n";
-				printIt=printIt+"Attributes:";
-		        TColumnDefinition column;
-		        for(int i=0;i<pStmt.getColumnList().size();i++){
-		            column = pStmt.getColumnList().getColumn(i);
-		            if(set.contains(column.getColumnName().toString().toLowerCase())){
-		            	valid=false;
-		            	break;
-		            }
-		            if (column.getConstraints() != null){
-		                for(int j=0;j<column.getConstraints().size();j++){
-		                	if(column.getConstraints().getConstraint(j).getConstraint_type().toString().toLowerCase().equals("primary_key")){
-		                		pKey=pKey+1;
-		                	}
-		                }
-		            }
-		            set.add(column.getColumnName().toString().toLowerCase());
-		            FieldType fdr=new FieldType();
-		            fdr.setName(column.getColumnName().toString());// for tableMetaData
-		            fdr.setType(DataType.isValidDataType(column.getDatatype().toString().toLowerCase()));
-		            if(column.getDatatype().toString().toLowerCase().matches("varchar\\([0-9]+\\)")){
-		            	tokens=column.getDatatype().toString().split("\\(");
-		            	toks=tokens[1].split("\\)");
-		            	fdr.setSize(Integer.parseInt(toks[0]));
-		            }
-		            fields.put(column.getColumnName().toString().toLowerCase(), fdr);
-		            printIt=printIt+column.getColumnName().toString();
-		            dataIt=dataIt+column.getColumnName().toString()+":";
-		            configIt=configIt+column.getColumnName().toString()+",";
-		            checkType=column.getDatatype().toString().toLowerCase();
-		            if(DataType.isValidDataType(checkType)==null){
-		            	valid=false;
-		            	break;
-		            }
-		            printIt=printIt+" "+column.getDatatype().toString();
-		            dataIt=dataIt+column.getDatatype().toString();
-		            configIt=configIt+column.getDatatype().toString()+"\n";
-		            if(i<pStmt.getColumnList().size()-1){
-		            	printIt=printIt+",";
-		            	dataIt=dataIt+",";
-		            }
-		        }
-		        temp.setFields(fields);
-		        configIt=configIt+"END";
-		        if(valid==true && pKey <= 1){
-		        	File dataFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".data");
-		    		File csFile=new File(DataBaseMemoryConfig.PATH_FOR_DATA+"/"+tableName+".csv");
-		    		dataFile.createNewFile();
+		} else {
+			try {
+				printIt = "Querytype:create\n";
+				printIt = printIt + "Tablename:" + tableName + "\n";
+				configIt = "\nBEGIN\n";
+				configIt = configIt + tableName + "\n";
+				printIt = printIt + "Attributes:";
+				TColumnDefinition column;
+				for (int i = 0; i < pStmt.getColumnList().size(); i++) {
+					column = pStmt.getColumnList().getColumn(i);
+					if (set.contains(column.getColumnName().toString()
+							.toLowerCase())) {
+						valid = false;
+						break;
+					}
+					if (column.getConstraints() != null) {
+						for (int j = 0; j < column.getConstraints().size(); j++) {
+							if (column.getConstraints().getConstraint(j)
+									.getConstraint_type().toString()
+									.toLowerCase().equals("primary_key")) {
+								pKey = pKey + 1;
+							}
+						}
+					}
+					set.add(column.getColumnName().toString().toLowerCase());
+					FieldType fdr = new FieldType();
+					fdr.setName(column.getColumnName().toString());// for
+																	// tableMetaData
+					fdr.setType(DataType.isValidDataType(column.getDatatype()
+							.toString().toLowerCase()));
+					if (column.getDatatype().toString().toLowerCase()
+							.matches("varchar\\([0-9]+\\)")) {
+						tokens = column.getDatatype().toString().split("\\(");
+						toks = tokens[1].split("\\)");
+						fdr.setSize(Integer.parseInt(toks[0]));
+					}
+					fields.put(column.getColumnName().toString().toLowerCase(),
+							fdr);
+					printIt = printIt + column.getColumnName().toString();
+					dataIt = dataIt + column.getColumnName().toString() + ":";
+					configIt = configIt + column.getColumnName().toString()
+							+ ",";
+					checkType = column.getDatatype().toString().toLowerCase();
+					if (DataType.isValidDataType(checkType) == null) {
+						valid = false;
+						break;
+					}
+					printIt = printIt + " " + column.getDatatype().toString();
+					dataIt = dataIt + column.getDatatype().toString();
+					configIt = configIt + column.getDatatype().toString()
+							+ "\n";
+					if (i < pStmt.getColumnList().size() - 1) {
+						printIt = printIt + ",";
+						dataIt = dataIt + ",";
+					}
+				}
+				temp.setFields(fields);
+				configIt = configIt + "END";
+				if (valid == true && pKey <= 1) {
+					File dataFile = new File(DataBaseMemoryConfig.PATH_FOR_DATA
+							+ "/" + tableName + ".data");
+					File csFile = new File(DataBaseMemoryConfig.PATH_FOR_DATA
+							+ "/" + tableName + ".csv");
+					dataFile.createNewFile();
 					csFile.createNewFile();
-					FileWriter frd=new FileWriter(dataFile);
-					BufferedWriter bwd=new BufferedWriter(frd);//to write in data file
-					FileWriter conr=new FileWriter(DataBaseMemoryConfig.PATH_FOR_CONF_FILE,true);
-					BufferedWriter bwcon=new BufferedWriter(conr);//to write into config file
-		        	System.out.print(printIt);
-		        	bwcon.write(configIt);
-		        	bwd.write(dataIt);
-			        bwd.close();
-			        bwcon.close();
-			       tableMetaData.put(tableName.toLowerCase(),temp);
-		        }
-		        else if(valid==false || pKey>1){
-		        	System.out.println("Query Invalid");
-		        } 
-			}
-			catch(Exception e){
+					FileWriter frd = new FileWriter(dataFile);
+					BufferedWriter bwd = new BufferedWriter(frd);// to write in
+																	// data file
+					FileWriter conr = new FileWriter(
+							DataBaseMemoryConfig.PATH_FOR_CONF_FILE, true);
+					BufferedWriter bwcon = new BufferedWriter(conr);// to write
+																	// into
+																	// config
+																	// file
+					System.out.print(printIt);
+					bwcon.write(configIt);
+					bwd.write(dataIt);
+					bwd.close();
+					bwcon.close();
+					tableMetaData.put(tableName.toLowerCase(), temp);
+				} else if (valid == false || pKey > 1) {
+					System.out.println("Query Invalid");
+				}
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
-	
-	public void selectCommand(String query){
-		
-		sqlParser.sqltext=query;
+
+	public void selectCommand(String query) {
+
+		sqlParser.sqltext = query;
 		int ret = sqlParser.parse();
-		SelectQuery q=null;
-		if(ret == 0){
-			for(int i=0;i<sqlParser.sqlstatements.size();i++){
-				q=new SelectQuery((TSelectSqlStatement)sqlParser.sqlstatements.get(i),query);
-				ValidateQuery validateQuery=new ValidateQuery(tableMetaData, q);
+		SelectQuery q = null;
+		if (ret == 0) {
+			for (int i = 0; i < sqlParser.sqlstatements.size(); i++) {
+				q = new SelectQuery(
+						(TSelectSqlStatement) sqlParser.sqlstatements.get(i),
+						query);
+				ValidateQuery validateQuery = new ValidateQuery(tableMetaData,
+						q);
 				try {
 					validateQuery.validataQuery();
 				} catch (InvalidQuery e) {
 					// TODO Auto-generated catch block
-					//e.printStackTrace();
+					// e.printStackTrace();
 					System.out.println("Query Invalid");
 					return;
 				}
-				//System.out.println(q);
+				// System.out.println(q);
 				executeSelect(validateQuery.getSelect());
 			}
-		}else{
+		} else {
 			System.out.println("Query Invalid");
 		}
 	}
-	
-	public void executeSelect(Select select){
+
+	public void executeSelect(Select select) {
 		List<Object> record;
-		TableIterator tableIt=new TableIterator(select.table);
-		tableIt.open();
-		SelectionOperator selectionOperator=new SelectionOperator();
-		ProjectionOperator projectionOperator=new ProjectionOperator();
+		TableIterator tableIt = new TableIterator(select.table);
+		SelectionOperator selectionOperator = new SelectionOperator();
+		ProjectionOperator projectionOperator = new ProjectionOperator();
 		printColumnNames(select);
-		if(select.orderBies.size() == 0){
-			
-			 while((record=tableIt.getNext())!=null) {
-				 record=selectionOperator.select(record, select.where.conditions, select.where.logicalOperators);
-				 if(record == null)
-					 continue;
-				 
-				 record=projectionOperator.project(record, select.projCols);
-				 System.out.println(FileReader.toString(record));
-				 
-			 }
-		}else{
-			OrderByOperator orderByOperator=new OrderByOperator();
-			List<List<Object>> records=new ArrayList<>();
-			while((record=tableIt.getNext())!=null) {
-				 record=selectionOperator.select(record, select.where.conditions, select.where.logicalOperators);
-				 if(record == null)
-					 continue;
-				 
+		if (select.orderBies.isEmpty()) {
+
+			while ((record = tableIt.getNext()) != null) {
+				record = selectionOperator.select(record,
+						select.where.conditions, select.where.logicalOperators);
+				if (record == null)
+					continue;
+
+				record = projectionOperator.project(record, select.projCols);
+				System.out.println(FileReader.toString(record));
+
+			}
+		} else {
+			OrderByOperator orderByOperator = new OrderByOperator(select.table,
+					select.orderBies);
+			int maxNumOfRecords = select.table.getMaxNumOfRecordsFitInMem();
+			List<List<Object>> records = new ArrayList<>();
+			while ((record = tableIt.getNext()) != null) {
+				record = selectionOperator.select(record,
+						select.where.conditions, select.where.logicalOperators);
+				if (record == null)
+					continue;
+
 				records.add(record);
-			 }
-			 orderByOperator.sort(records, select.orderBies);
-			 for(List<Object> r:records){
-				 r=projectionOperator.project(r, select.projCols);
-				 System.out.println(FileReader.toString(r));
-			 } 
+				/*if (records.size() > maxNumOfRecords) {
+					orderByOperator.createSortFile(records);
+					records = new ArrayList<>();
+				}*/
+			}
+			if (orderByOperator.isMultiPhaseSort()) {
+				orderByOperator.merge();
+                TableIterator sortedTableIt=new TableIterator(orderByOperator.getResultTable());
+                List<Object> tuple=null;
+                while( (tuple=sortedTableIt.getNext())!= null){
+                	tuple = projectionOperator.project(tuple, select.projCols);
+    				System.out.println(FileReader.toString(tuple));
+                }
+			} 
+			else {
+				orderByOperator.sort(records, select.orderBies);
+				for (List<Object> r : records) {
+					r = projectionOperator.project(r, select.projCols);
+					System.out.println(FileReader.toString(r));
+				}
+			}
 		}
 	}
-	private void printColumnNames(Select select){
-		List<Object> colNames=new ArrayList<>();
-		if( select.projCols.isEmpty()){
-			for(FieldType fieldType:select.table.getFieldList()){
+
+	private void printColumnNames(Select select) {
+		List<Object> colNames = new ArrayList<>();
+		if (select.projCols.isEmpty()) {
+			for (FieldType fieldType : select.table.getFieldList()) {
 				colNames.add(fieldType.getName());
 			}
-		}else{
-			for(Expression exp:select.projCols){
+		} else {
+			for (Expression exp : select.projCols) {
 				colNames.add(exp.colName);
 			}
 		}

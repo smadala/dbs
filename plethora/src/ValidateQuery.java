@@ -101,7 +101,7 @@ public class ValidateQuery {
 		WhereClause where=new WhereClause();
 		if( query.getCondition() != null &&  query.getCondition().getCondition() != null){
 			
-			System.out.println(query.getCondition().getCondition());
+			//System.out.println(query.getCondition().getCondition());
 			if(!validateCondition(query.getCondition().getCondition(),where))
 				throw new InvalidQuery("Invalid type in condition");
 		}

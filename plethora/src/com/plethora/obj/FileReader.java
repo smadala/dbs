@@ -115,11 +115,11 @@ public class FileReader {
 		return is;
 	}
 	
-	public static OutputStream getTableOutputStream(String tableName){
+	public static OutputStream getTableOutputStream(String tableName,boolean append){
 		File dataFile = getTableDataFile(tableName); 
 		OutputStream os=null;
 		try {
-			 os = new FileOutputStream(dataFile,true);
+			 os = new FileOutputStream(dataFile,append);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -172,6 +172,16 @@ public class FileReader {
 	public static Table cloneTable(Table table, String tableName){
 		Table clTable= new Table(tableName);
 		clTable.setFields(table.getFields());
+		
+		File csFile = new File(DataBaseMemoryConfig.PATH_FOR_DATA
+				+ "/" + tableName + ".csv");
+		try {
+			csFile.createNewFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return clTable;
 	}
 	

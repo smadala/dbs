@@ -18,6 +18,7 @@ public class TableIterator {
 	private Table table;
 	public TableIterator(Table table){
 		this.table=table;
+		open();
 	}
 	InputStream iStream;
 	Iterator<PageEntry> pageEntries;

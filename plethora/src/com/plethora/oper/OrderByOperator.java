@@ -16,29 +16,33 @@ import com.plethora.obj.Table;
 public class OrderByOperator {
 	
 	Table table;
-	int sublistId=1000;
+	int sublistId;
 	List<Table> subTables;
 	List<OrderBy> orderBies;
 	Table resultTable;
 	
+	public OrderByOperator(Table table, List<OrderBy> orderBies){
+		this.table=table;
+		this.orderBies=orderBies;
+		subTables=new ArrayList<>();
+		sublistId=1000;
+	}
 	public void sort(List<List<Object>> records, List<OrderBy> orderBies){
 		if(orderBies.size() == 0)
 			return;
 		Comparator<List<Object>> comparator=new OrderBySort(orderBies);
 		Collections.sort(records, comparator);
 	}
+	
 	public String getTemporaryTableName(){
 		StringBuilder fileName=new StringBuilder();
 		fileName.append(table.getTableName()).append('_').append(sublistId++);
 		return fileName.toString();
 	}
-	public void createSortFile(List<Page> pages){
+	
+	public void createSortFile(List<List<Object>> records){
 		
 		String tableName=getTemporaryTableName();
-		List<List<Object>> records=new ArrayList<>();
-		for(Page page:pages){
-			records.addAll(page.getRecords());
-		}
 		sort(records,orderBies);
 		Table auxTable=FileReader.cloneTable(table, tableName);
 		subTables.add(auxTable);
@@ -53,13 +57,15 @@ public class OrderByOperator {
 	
 	public void merge(){
 		//implement n phase merge currently two phase
-		resultTable=merge(subTables);
+		merge(subTables);
+		
 	}
 	
 	public Table merge(List<Table> subTables){
 		int size=subTables.size();
 		List<TableIterator> tableIterators=new ArrayList<>(size);
-		Table resultTable=null;
+		String resultTableName=getTemporaryTableName();
+		resultTable= FileReader.cloneTable(table, resultTableName);
 		TableWriter tableWriter=new TableWriter(resultTable);
 		for(Table table:subTables){
 			tableIterators.add(new TableIterator(table));
@@ -67,22 +73,25 @@ public class OrderByOperator {
 		MergeRecord mergeRecord;
 		List<Object> record;
 		PriorityQueue<MergeRecord> pq=new PriorityQueue<>(size, new MergeLineOrderBySort(orderBies));
-		for(int i=0;i<size;i++){
-			record=tableIterators.get(i).getNext();
-			if(record != null){
-			pq.add( new MergeRecord( record, i));
-			}
-		}
 		
 		
-		while(pq.isEmpty()){
+		
+		while(!pq.isEmpty()){
 			mergeRecord=pq.poll();
 			tableWriter.write(mergeRecord.record);
 			record=tableIterators.get(mergeRecord.subTableIndex).getNext();
 			if(record != null){
 			pq.add( new MergeRecord( record, mergeRecord.subTableIndex));
-			}
+			}/*else{
+				for(int i=0;i<size;i++){
+					record=tableIterators.get(i).getNext();
+					if(record != null){
+					pq.add( new MergeRecord( record, i));
+					}
+				}
+			}*/
 		}
+		tableWriter.close();
 		return resultTable;
 	}
 	
@@ -140,4 +149,15 @@ public class OrderByOperator {
 			return diff;
 		}
 	}
+	
+	public boolean isMultiPhaseSort(){
+		return !subTables.isEmpty();
+	}
+	public Table getResultTable() {
+		return resultTable;
+	}
+	public void setResultTable(Table resultTable) {
+		this.resultTable = resultTable;
+	}
+	
 }

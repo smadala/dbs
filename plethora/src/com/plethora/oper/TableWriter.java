@@ -15,6 +15,7 @@ public class TableWriter {
 	
 	public TableWriter(Table table){
 		this.table=table;
+		open();
 	}
 	
 	OutputStream OStream=null;
@@ -24,11 +25,11 @@ public class TableWriter {
 	StringBuilder stringBuilder=new StringBuilder();
 	
 	public void open(){
-		OStream=FileReader.getTableOutputStream(table.getTableName());
+		OStream=FileReader.getTableOutputStream(table.getTableName(),false);
 		lastPage=new Page();
 		lastPageEntry=createPageEntry(0, 0, 0);
-		System.out.println("In Open "+lastPageEntry.getLeftOver());
-		System.out.println("PageSize "+DataBaseMemoryConfig.PAGE_SIZE);
+//		System.out.println("In Open "+lastPageEntry.getLeftOver());
+	//	System.out.println("PageSize "+DataBaseMemoryConfig.PAGE_SIZE);
 		pageNumbers=pageNumbers+1;
 		table.getPageEntries().add(lastPageEntry);
 	}

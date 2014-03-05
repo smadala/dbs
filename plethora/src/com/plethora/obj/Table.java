@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.plethora.mem.DataBaseMemoryConfig;
+
 public class Table {
 	
 	private String tableName;
@@ -61,5 +63,11 @@ public class Table {
 			fieldList.add(it.next().getValue());
 		}
 		return fieldList;
+	}
+	
+	public int getMaxNumOfRecordsFitInMem(){
+		int numOfPages=pageEntries.size();
+		int avgRecordSize = numOfPages * DataBaseMemoryConfig.PAGE_SIZE/ pageEntries.get(numOfPages-1).getEndRecordId();
+		return DataBaseMemoryConfig.NUM_OF_PAGES * DataBaseMemoryConfig.PAGE_SIZE / avgRecordSize ;
 	}
 }
