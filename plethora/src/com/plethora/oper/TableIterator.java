@@ -26,9 +26,7 @@ public class TableIterator {
 	List<FieldType> fieldList;
 	private PageEntry pageEntry;
 	Page page;
-	List<Object> currentTuple;
 	Iterator<List<Object>> tupleIterator;
-	Set<FieldType> fields; 
 	String tableName;
 	boolean readBlock( ){
 		String cacheKey=null;
@@ -41,6 +39,7 @@ public class TableIterator {
 				return true;
 			page=FileReader.loadPage(cacheKey, pageEntry, fieldList, fileReader);
 			cachedPages.put(cacheKey, page);
+
 			return true;
 		}
 		else{
