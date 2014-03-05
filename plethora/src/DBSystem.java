@@ -40,6 +40,7 @@ import com.plethora.oper.OrderByOperator;
 import com.plethora.oper.ProjectionOperator;
 import com.plethora.oper.SelectionOperator;
 import com.plethora.oper.TableIterator;
+import com.plethora.oper.TableWriter;
 import com.plethore.excp.InvalidQuery;
 
 public class DBSystem {
@@ -65,6 +66,7 @@ public class DBSystem {
 					tokens = line.split(ConfigConstants.PROPS_DELIMITER);
 					// memoryProps.put(tokens[0],tokens[1]);
 					if (tokens[0].equals(ConfigConstants.PAGESIZE)) {
+					//	System.out.println("In Main method "+Integer.parseInt(tokens[1]));
 						DataBaseMemoryConfig.PAGE_SIZE = Integer
 								.parseInt(tokens[1]);
 					} else if (tokens[0].equals(ConfigConstants.NUM_PAGES)) {
