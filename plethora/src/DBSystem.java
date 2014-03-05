@@ -12,7 +12,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,12 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.table.TableStringConverter;
 
 import com.plethora.mem.ConfigConstants;
 import com.plethora.mem.DataBaseMemoryConfig;
+import static com.plethora.mem.DataBaseMemoryConfig.cachedPages;
 import com.plethora.mem.LRUMemory;
 import com.plethora.obj.DataType;
+import com.plethora.obj.Expression;
 import com.plethora.obj.FieldType;
 import com.plethora.obj.FileReader;
 import com.plethora.obj.Page;
@@ -40,16 +40,15 @@ import com.plethora.oper.OrderByOperator;
 import com.plethora.oper.ProjectionOperator;
 import com.plethora.oper.SelectionOperator;
 import com.plethora.oper.TableIterator;
-import com.plethora.oper.TableWriter;
 import com.plethore.excp.InvalidQuery;
 
 public class DBSystem {
 	public List<String> tableNames = new ArrayList<String>();
-	public LRUMemory<String, Page> cachedPages;
+	
 
 	public static Map<String, Table> tableMetaData = new HashMap<String, Table>();
   
-	public static final String LRU_MEMORY_KEY_FORMAT = "{0}_{1}"; // tableName_pageNumber
+	 // tableName_pageNumber
 	
 	
 	TGSqlParser sqlParser = new TGSqlParser(EDbVendor.dbvmysql);
@@ -190,8 +189,7 @@ public class DBSystem {
 
 		PageEntry pageEntry = getPageEntry(tableName, recordId);
 
-		String pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName,
-				pageEntry.getPageNumber());
+		String pageKey = FileReader.getCacheKey(tableName, pageEntry.getPageNumber());
 
 		Page page = cachedPages.get(pageKey, true);
 		if (page == null) {
@@ -275,8 +273,7 @@ public class DBSystem {
 		long offset = lastEntry.getOffset()
 				+ (DataBaseMemoryConfig.PAGE_SIZE - lastEntry.getLeftOver());
 
-		pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName,
-				lastPageNum);
+		pageKey = FileReader.getCacheKey(tableName, lastPageNum);
 
 		if (lastEntry.canAddRecord(record)) { // space available in lastPage
 			page = cachedPages.get(pageKey, true);
@@ -302,8 +299,7 @@ public class DBSystem {
 			List<Object> r=new ArrayList<>();
 			r.add(record);
 			page.getRecords().add(r);
-			pageKey = MessageFormat.format(LRU_MEMORY_KEY_FORMAT, tableName,
-					lastPageNum);
+			pageKey = FileReader.getCacheKey(tableName, lastPageNum);
 
 			cachedPages.put(pageKey, page);
 
@@ -520,7 +516,7 @@ public class DBSystem {
 					validateQuery.validataQuery();
 				} catch (InvalidQuery e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
 					System.out.println("Query Invalid");
 					return;
 				}
@@ -538,6 +534,7 @@ public class DBSystem {
 		tableIt.open();
 		SelectionOperator selectionOperator=new SelectionOperator();
 		ProjectionOperator projectionOperator=new ProjectionOperator();
+		printColumnNames(select);
 		if(select.orderBies.size() == 0){
 			
 			 while((record=tableIt.getNext())!=null) {
@@ -546,7 +543,8 @@ public class DBSystem {
 					 continue;
 				 
 				 record=projectionOperator.project(record, select.projCols);
-				 System.out.println(record);
+				 System.out.println(FileReader.toString(record));
+				 
 			 }
 		}else{
 			OrderByOperator orderByOperator=new OrderByOperator();
@@ -561,8 +559,21 @@ public class DBSystem {
 			 orderByOperator.sort(records, select.orderBies);
 			 for(List<Object> r:records){
 				 r=projectionOperator.project(r, select.projCols);
-			 	 System.out.println(r);
+				 System.out.println(FileReader.toString(r));
 			 } 
 		}
+	}
+	private void printColumnNames(Select select){
+		List<Object> colNames=new ArrayList<>();
+		if( select.projCols.isEmpty()){
+			for(FieldType fieldType:select.table.getFieldList()){
+				colNames.add(fieldType.getName());
+			}
+		}else{
+			for(Expression exp:select.projCols){
+				colNames.add(exp.colName);
+			}
+		}
+		System.out.println(FileReader.toString(colNames));
 	}
 }

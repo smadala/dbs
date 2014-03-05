@@ -92,7 +92,7 @@ public class ValidateQuery {
 				TResultColumn column=query.getColumns().getResultColumn(i);
 				columnName=column.getExpr().toString();
 				validateColumn(columnName);
-				projCol=new Expression(select.table.getColumnPos(columnName));
+				projCol=new Expression(select.table.getColumnPos(columnName.toLowerCase()),columnName);
 				projCols.add(projCol);
 			}
 		}

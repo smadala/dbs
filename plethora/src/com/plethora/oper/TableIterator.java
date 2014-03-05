@@ -1,6 +1,7 @@
 package com.plethora.oper;
 
 import java.io.InputStream;
+import static com.plethora.mem.DataBaseMemoryConfig.cachedPages;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -28,8 +29,13 @@ public class TableIterator {
 	Set<FieldType> fields; 
 	
 	boolean readBlock( ){
+		String cacheKey=null;
 		if(pageEntries.hasNext()){
 			pageEntry=pageEntries.next();
+			cacheKey=FileReader.getCacheKey(table.getTableName(), pageEntry.getPageNumber());
+			page=cachedPages.get(cacheKey, true);
+			if( page != null)
+				return true;
 			List<List<Object>> tuples=new ArrayList<List<Object>>();
 			String line;
 			int start=0,end=0;
@@ -42,6 +48,7 @@ public class TableIterator {
 			}
 			page=new Page();
 			page.setRecords(tuples);
+			cachedPages.put(cacheKey, page);
 			return true;
 		}
 		else

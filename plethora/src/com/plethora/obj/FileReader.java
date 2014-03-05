@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -149,11 +150,9 @@ public class FileReader {
 		
 		StringBuilder text=new StringBuilder();
 		for(int i=0;i<record.size()-1;i++){
-			text.append(record.get(i)).append(',');
-			//text.append('"').append(record.get(i)).append('"').append(',');
+			text.append('"').append(record.get(i)).append('"').append(',');
 		}
-		text.append(record.get(record.size()-1));
-		//text.append('"').append(record.get(record.size()-1)).append('"');
+		text.append('"').append(record.get(record.size()-1)).append('"');
 		return text.toString();
 	}
 	
@@ -179,12 +178,12 @@ public class FileReader {
 	public static List<Object> getTuple(String record,List<FieldType> types){
 		
 		List<Object> tuple=new ArrayList<>();
-		String []tokens=record.split(",");
+		List<String> tokens=getTokens(record);
 		FieldType field=null;
 		Object val=null; String token;
 		
 		for(int i=0;i<types.size();i++){
-			token = tokens[i];
+			token = tokens.get(i);
 			field=types.get(i);
 			switch(field.getType()){
 			case INTEGER:
@@ -200,5 +199,29 @@ public class FileReader {
 			tuple.add(val);
 		}
 		return tuple;
+	}
+	public static List<String> getTokens(String record){
+		List<String> tokens=new ArrayList<>();
+		boolean inQuotes=false;
+		int len=record.length();
+		int begin=1,end=0;
+		for(int i=0;i<len;i++){
+			
+			if(record.charAt(i) == '"'){
+				    
+					inQuotes=!inQuotes;
+					continue;
+			}
+			if( record.charAt(i) == ',' && !inQuotes){
+				tokens.add(record.substring(begin,i-1));
+				begin=i+2;
+			}
+		}
+		tokens.add(record.substring(begin,len-1));
+		return tokens;
+	}
+	public static String getCacheKey(String tableName, int pageNumber ){
+		return MessageFormat.format(DataBaseMemoryConfig.LRU_MEMORY_KEY_FORMAT, tableName,
+				pageNumber);
 	}
 }
