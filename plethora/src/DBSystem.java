@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 import com.plethora.mem.ConfigConstants;
@@ -361,7 +362,7 @@ public class DBSystem {
 		String query;
 		obj.readConfig(DataBaseMemoryConfig.PATH_FOR_CONF_FILE);
 		obj.populateDBInfo();
-		try {
+		/*try {
 			InputStream br = new FileInputStream(args[1]);
 			while ((query = FileReader.readLine(br)) != null
 					&& !query.trim().isEmpty()) {
@@ -370,6 +371,14 @@ public class DBSystem {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		}*/
+		Scanner input=new Scanner(System.in);
+		int testCases=input.nextInt();
+		query=input.nextLine();
+		while(testCases>0){
+			query=input.nextLine();
+			obj.queryType(query);
+			testCases=testCases-1;
 		}
 
 	}

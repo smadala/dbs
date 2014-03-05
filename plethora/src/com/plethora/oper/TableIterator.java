@@ -30,13 +30,13 @@ public class TableIterator {
 	Set<FieldType> fields; 
 	
 	boolean readBlock( ){
-		String cacheKey=null;
+		//String cacheKey=null;
 		if(pageEntries.hasNext()){
 			pageEntry=pageEntries.next();
-			cacheKey=FileReader.getCacheKey(table.getTableName(), pageEntry.getPageNumber());
+			/*cacheKey=FileReader.getCacheKey(table.getTableName(), pageEntry.getPageNumber());
 			page=cachedPages.get(cacheKey, true);
 			if( page != null)
-				return true;
+				return true;*/
 			List<List<Object>> tuples=new ArrayList<List<Object>>();
 			String line;
 			int start=0,end=0;
@@ -49,7 +49,7 @@ public class TableIterator {
 			}
 			page=new Page();
 			page.setRecords(tuples);
-			cachedPages.put(cacheKey, page);
+			//cachedPages.put(cacheKey, page);
 			return true;
 		}
 		else
